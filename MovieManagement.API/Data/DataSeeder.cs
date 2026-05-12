@@ -6,8 +6,8 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MovieDbContext context)
     {
-        if (context.Countries.Any()) return;
-
+        if (!context.Countries.Any())
+        {
         var countries = new List<Country>
         {
             new() { CountryName = "USA", Capital = "Washington D.C.", Population = 331000000, LanguageName = "English" },
@@ -18,7 +18,10 @@ public static class DataSeeder
         };
         await context.Countries.AddRangeAsync(countries);
         await context.SaveChangesAsync();
+        }
 
+        if (!context.Genres.Any())
+        {
         var genres = new List<Genre>
         {
             new() { GenreName = "Sci-Fi", Description = "Science fiction films exploring futuristic concepts" },
@@ -29,7 +32,10 @@ public static class DataSeeder
         };
         await context.Genres.AddRangeAsync(genres);
         await context.SaveChangesAsync();
+        }
 
+        if (!context.Directors.Any())
+        {
         var directors = new List<Director>
         {
             new() { FullName = "Christopher Nolan", BirthDate = new DateTime(1970, 7, 30), CountryID = 2, ExperienceYears = 25, AwardsCount = 12 },
@@ -40,7 +46,10 @@ public static class DataSeeder
         };
         await context.Directors.AddRangeAsync(directors);
         await context.SaveChangesAsync();
+        }
 
+        if (!context.Actors.Any())
+        {
         var actors = new List<Actor>
         {
             new() { FullName = "Leonardo DiCaprio", Age = 49, Gender = "Male", CountryID = 1, OscarAwards = 1, Salary = 25000000, PhotoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Leonardo_DiCaprio_2014.jpg/440px-Leonardo_DiCaprio_2014.jpg" },
@@ -56,7 +65,10 @@ public static class DataSeeder
         };
         await context.Actors.AddRangeAsync(actors);
         await context.SaveChangesAsync();
+        }
 
+        if (!context.Movies.Any())
+        {
         var movies = new List<Movie>
         {
             new() { Title = "Inception", Description = "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.", ReleaseYear = 2010, DurationMinutes = 148, CountryID = 1, DirectorID = 1, GenreID = 1, MainActorID = 1, Budget = 160000000, BoxOffice = 836800000, Rating = 8.8, DiscountPercent = 20, LanguageName = "English", AgeRestriction = "PG-13", ProductionCompany = "Warner Bros.", SubtitleAvailable = true, Is3D = false, PosterUrl = "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg", TrailerUrl = "YoHD9XEInc0" },
@@ -72,6 +84,7 @@ public static class DataSeeder
         };
         await context.Movies.AddRangeAsync(movies);
         await context.SaveChangesAsync();
+        }
 
         var ratings = new List<Rating>
         {
@@ -144,3 +157,4 @@ public static class DataSeeder
         await context.SaveChangesAsync();
     }
 }
+
