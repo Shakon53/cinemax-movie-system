@@ -21,6 +21,7 @@ public class MovieDto
     public bool SubtitleAvailable { get; set; }
     public bool Is3D { get; set; }
     public string PosterUrl { get; set; } = string.Empty;
+    public string TrailerUrl { get; set; } = string.Empty;
     public double? IMDbRating { get; set; }
     public int? RottenTomatoes { get; set; }
     public List<ActorDto> Actors { get; set; } = new();
@@ -47,4 +48,5 @@ public class CreateMovieDto
     public bool SubtitleAvailable { get; set; }
     public bool Is3D { get; set; }
     public string PosterUrl { get; set; } = string.Empty;
+    public string TrailerUrl { get; set; } = string.Empty;
 }

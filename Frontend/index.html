@@ -22,7 +22,9 @@
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
           <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favorites <span id="favCount" style="background:#e50914;border-radius:10px;padding:1px 6px;font-size:11px;">0</span></a></li>
         </ul>
+        <button class="theme-toggle ms-2" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel">Light</span></button>
       </div>
     </div>
   </nav>
@@ -119,7 +121,7 @@
 
     async function loadMovies() {
       const grid = document.getElementById('moviesGrid');
-      grid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><div class="spinner"></div></div>';
+      grid.innerHTML = Array(8).fill(`<div class="skeleton-card"><div class="skeleton skeleton-poster"></div><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div></div>`).join('');
       try {
         const search = document.getElementById('searchInput').value;
         const sort = document.getElementById('sortSelect').value;
@@ -133,10 +135,12 @@
           grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-film"></i><h3>No movies found</h3><p>Try adjusting your search or filters</p></div>';
           return;
         }
+        const favs = getFavs();
         grid.innerHTML = movies.map(m => `
           <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'">
             ${m.discountPercent > 0 ? `<span class="discount-badge">-${m.discountPercent}%</span>` : ''}
-            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <button class="btn-fav ${favs.includes(m.movieID)?'active':''}" onclick="event.stopPropagation();toggleFav(${m.movieID},'${m.title.replace(/'/g,"'")}',this)" title="Add to favorites">${favs.includes(m.movieID)?'❤️':'🤍'}</button>
+            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
             <div class="movie-poster-placeholder" ${m.posterUrl ? 'style="display:none"' : ''}>🎬</div>
             <div class="movie-info">
               <div class="movie-title" title="${m.title}">${m.title}</div>
@@ -176,8 +180,33 @@
     });
     document.getElementById('sortSelect').addEventListener('change', () => { currentPage = 1; loadMovies(); });
 
+    // FAVORITES
+    function getFavs() { return JSON.parse(localStorage.getItem('cinemax_favs') || '[]'); }
+    function toggleFav(id, title, btn) {
+      let favs = getFavs();
+      if (favs.includes(id)) { favs = favs.filter(f => f !== id); btn.textContent = '🤍'; btn.classList.remove('active'); showToast(`Removed from favorites`); }
+      else { favs.push(id); btn.textContent = '❤️'; btn.classList.add('active'); showToast(`❤️ ${title} added to favorites!`); }
+      localStorage.setItem('cinemax_favs', JSON.stringify(favs));
+      updateFavCount();
+    }
+    function updateFavCount() { const c = getFavs().length; document.getElementById('favCount').textContent = c; document.getElementById('favCount').style.display = c > 0 ? '' : 'none'; }
+
+    // DARK/LIGHT THEME
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-mode');
+      localStorage.setItem('cinemax_theme', isLight ? 'light' : 'dark');
+      document.getElementById('themeIcon').className = isLight ? 'bi bi-moon' : 'bi bi-sun';
+      document.getElementById('themeLabel').textContent = isLight ? 'Dark' : 'Light';
+    }
+    if (localStorage.getItem('cinemax_theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('themeIcon').className = 'bi bi-moon';
+      document.getElementById('themeLabel').textContent = 'Dark';
+    }
+
     loadGenres();
     loadMovies();
+    updateFavCount();
   </script>
 <script src="js/keepalive.js"></script></body>
 </html>

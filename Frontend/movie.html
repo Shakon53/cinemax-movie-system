@@ -89,6 +89,14 @@
           </div>
         </div>
 
+        <!-- TRAILER -->
+        <div class="movies-section" id="trailerSection" style="display:none;">
+          <h2 class="section-title mb-4">🎬 Official Trailer</h2>
+          <div class="trailer-container">
+            <iframe id="trailerFrame" src="" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+          </div>
+        </div>
+
         <!-- BOX OFFICE -->
         <div class="movies-section">
           <div class="row g-3 mb-4">
@@ -209,6 +217,11 @@
       `;
 
       document.getElementById('reviewForm').addEventListener('submit', submitReview);
+
+      if (m.trailerUrl) {
+        document.getElementById('trailerSection').style.display = '';
+        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${m.trailerUrl}?rel=0`;
+      }
     }
 
     function renderReview(r) {

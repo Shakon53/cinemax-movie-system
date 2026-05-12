@@ -21,6 +21,7 @@ public class Movie
     public bool SubtitleAvailable { get; set; }
     public bool Is3D { get; set; }
     public string PosterUrl { get; set; } = string.Empty;
+    public string TrailerUrl { get; set; } = string.Empty;
 
     public Country? Country { get; set; }
     public Director? Director { get; set; }
