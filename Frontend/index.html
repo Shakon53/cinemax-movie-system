@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineMax — Movie Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+        <i class="bi bi-list text-white fs-4"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-4 me-auto gap-1">
+          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
+          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Discover <span>Amazing</span> Movies</h1>
+    <p>Explore thousands of films, ratings, and reviews</p>
+    <div class="d-flex gap-3 mt-4">
+      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
+        <i class="bi bi-film text-danger"></i> 10+ Movies
+      </div>
+      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
+        <i class="bi bi-people text-danger"></i> 10 Actors
+      </div>
+      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
+        <i class="bi bi-star text-warning"></i> Top Rated Films
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH & FILTER -->
+  <section class="search-section">
+    <div class="d-flex gap-3 align-items-center">
+      <div class="position-relative flex-grow-1">
+        <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search movies by title or description..." style="padding-left:44px;">
+      </div>
+      <select id="sortSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="year">📅 Newest</option>
+        <option value="title">🔤 A-Z</option>
+      </select>
+    </div>
+    <div id="genreFilters" class="d-flex gap-2 mt-3 flex-wrap">
+      <button class="filter-btn active" data-genre="">All</button>
+    </div>
+  </section>
+
+  <!-- MOVIES -->
+  <section class="movies-section">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="section-title mb-0">All Movies</h2>
+      <span id="movieCount" class="text-secondary" style="font-size:14px;"></span>
+    </div>
+    <div id="moviesGrid" class="movies-grid">
+      <div class="loading-spinner" style="grid-column:1/-1;">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <div id="pagination" class="pagination-custom mt-4"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">CINEMAX</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="actors.html">Actors</a>
+      <a href="reviews.html">Reviews</a>
+      <a href="admin.html">Admin</a>
+    </div>
+    <div class="footer-copy">© 2024 CineMax Movie Management System. Built with ASP.NET Core & Bootstrap 5.</div>
+  </footer>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let currentPage = 1, totalCount = 0, currentGenre = '', currentSort = 'rating', searchTimeout;
+    const pageSize = 12;
+
+    async function loadGenres() {
+      try {
+        const genres = await api.get('/genres');
+        const container = document.getElementById('genreFilters');
+        genres.forEach(g => {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.dataset.genre = g.genreID;
+          btn.textContent = g.genreName;
+          btn.onclick = () => { currentGenre = g.genreID; currentPage = 1; setActiveGenre(btn); loadMovies(); };
+          container.appendChild(btn);
+        });
+        container.querySelector('[data-genre=""]').onclick = () => { currentGenre = ''; currentPage = 1; setActiveGenre(container.querySelector('[data-genre=""]')); loadMovies(); };
+      } catch (e) {}
+    }
+
+    function setActiveGenre(btn) {
+      document.querySelectorAll('#genreFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function loadMovies() {
+      const grid = document.getElementById('moviesGrid');
+      grid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><div class="spinner"></div></div>';
+      try {
+        const search = document.getElementById('searchInput').value;
+        const sort = document.getElementById('sortSelect').value;
+        const params = new URLSearchParams({ page: currentPage, pageSize, sortBy: sort });
+        if (search) params.append('search', search);
+        if (currentGenre) params.append('genreId', currentGenre);
+        const { data: movies, total } = await api.getWithHeaders(`/movies?${params}`);
+        totalCount = total;
+        document.getElementById('movieCount').textContent = `${total} movies found`;
+        if (!movies.length) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-film"></i><h3>No movies found</h3><p>Try adjusting your search or filters</p></div>';
+          return;
+        }
+        grid.innerHTML = movies.map(m => `
+          <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'">
+            ${m.discountPercent > 0 ? `<span class="discount-badge">-${m.discountPercent}%</span>` : ''}
+            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <div class="movie-poster-placeholder" ${m.posterUrl ? 'style="display:none"' : ''}>🎬</div>
+            <div class="movie-info">
+              <div class="movie-title" title="${m.title}">${m.title}</div>
+              <div class="movie-meta">
+                <span class="movie-year">${m.releaseYear}</span>
+                <span class="movie-genre">${m.genreName}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
+                ${m.is3D ? '<span style="font-size:10px;background:rgba(99,102,241,0.15);color:#818cf8;padding:2px 6px;border-radius:4px;">3D</span>' : ''}
+              </div>
+              <a href="movie.html?id=${m.movieID}" class="btn-details">View Details</a>
+            </div>
+          </div>`).join('');
+        renderPagination(Math.ceil(total / pageSize));
+      } catch (e) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load movies</h3><p>Make sure the API is running on localhost:5000</p></div>';
+      }
+    }
+
+    function renderPagination(totalPages) {
+      const p = document.getElementById('pagination');
+      if (totalPages <= 1) { p.innerHTML = ''; return; }
+      let html = '';
+      if (currentPage > 1) html += `<button class="page-btn" onclick="goPage(${currentPage-1})"><i class="bi bi-chevron-left"></i></button>`;
+      for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++)
+        html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      if (currentPage < totalPages) html += `<button class="page-btn" onclick="goPage(${currentPage+1})"><i class="bi bi-chevron-right"></i></button>`;
+      p.innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; loadMovies(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => { currentPage = 1; loadMovies(); }, 400);
+    });
+    document.getElementById('sortSelect').addEventListener('change', () => { currentPage = 1; loadMovies(); });
+
+    loadGenres();
+    loadMovies();
+  </script>
+</body>
+</html>

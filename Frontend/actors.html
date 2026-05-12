@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actors — CineMax</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-4 me-auto gap-1">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
+          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero" style="padding:50px 48px 40px;">
+    <h1>🎭 <span>Actors</span></h1>
+    <p>Meet the talented cast of our movie collection</p>
+  </section>
+
+  <div class="movies-section">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="section-title mb-0">All Actors</h2>
+      <div class="position-relative" style="width:280px;">
+        <i class="bi bi-search position-absolute" style="left:14px;top:50%;transform:translateY(-50%);color:#666;"></i>
+        <input type="text" id="actorSearch" class="search-bar" placeholder="Search actors..." style="padding-left:40px;padding-top:10px;padding-bottom:10px;">
+      </div>
+    </div>
+
+    <div id="actorsGrid" class="actors-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+      <div class="loading-spinner" style="grid-column:1/-1;"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">CINEMAX</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="actors.html">Actors</a><a href="reviews.html">Reviews</a></div>
+    <div class="footer-copy">© 2024 CineMax</div>
+  </footer>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let allActors = [];
+
+    async function loadActors() {
+      try {
+        allActors = await api.get('/actors');
+        renderActors(allActors);
+      } catch (e) {
+        document.getElementById('actorsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load actors</h3></div>';
+      }
+    }
+
+    function renderActors(actors) {
+      const grid = document.getElementById('actorsGrid');
+      if (!actors.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-people"></i><h3>No actors found</h3></div>';
+        return;
+      }
+      grid.innerHTML = actors.map(a => `
+        <div class="actor-card" style="cursor:default;">
+          ${a.photoUrl
+            ? `<img class="actor-photo" src="${a.photoUrl}" alt="${a.fullName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex">`
+            : ''}
+          <div class="actor-photo-placeholder" ${a.photoUrl ? 'style="display:none"' : ''}>🎭</div>
+          <div style="padding:14px;">
+            <div class="actor-name" style="font-size:15px;">${a.fullName}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;">
+              <span style="background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:4px;font-size:11px;color:#b3b3b3;">${a.age} years</span>
+              <span style="background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:4px;font-size:11px;color:#b3b3b3;">${a.gender}</span>
+            </div>
+            <div style="font-size:12px;color:#666;margin-bottom:6px;"><i class="bi bi-geo-alt me-1"></i>${a.countryName}</div>
+            ${a.oscarAwards > 0
+              ? `<div style="font-size:12px;color:#f5c518;">🏆 ${a.oscarAwards} Oscar Award${a.oscarAwards>1?'s':''}</div>`
+              : '<div style="font-size:12px;color:#444;">No Oscar awards</div>'}
+            <div style="font-size:12px;color:#666;margin-top:6px;">Salary: ${formatMoney(a.salary)}/film</div>
+          </div>
+        </div>`).join('');
+    }
+
+    document.getElementById('actorSearch').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      renderActors(allActors.filter(a => a.fullName.toLowerCase().includes(q) || a.countryName.toLowerCase().includes(q)));
+    });
+
+    loadActors();
+  </script>
+</body>
+</html>

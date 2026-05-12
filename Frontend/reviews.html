@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reviews — CineMax</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-4 me-auto gap-1">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
+          <li class="nav-item"><a class="nav-link active" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero" style="padding:50px 48px 40px;">
+    <h1>💬 User <span>Reviews</span></h1>
+    <p>Read and share your thoughts about movies</p>
+  </section>
+
+  <div class="movies-section">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <!-- WRITE REVIEW -->
+        <div class="review-form-card mb-4">
+          <h4><i class="bi bi-pencil-square me-2 text-danger"></i>Write a Review</h4>
+          <form id="reviewForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input type="text" id="rUsername" class="form-control form-control-dark" placeholder="Your name" required>
+              </div>
+              <div class="col-md-6">
+                <input type="email" id="rEmail" class="form-control form-control-dark" placeholder="Your email" required>
+              </div>
+              <div class="col-12">
+                <select id="rMovieId" class="form-control form-control-dark" required>
+                  <option value="">Select a movie...</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <textarea id="rComment" class="form-control form-control-dark" rows="4" placeholder="Share your thoughts about this movie..." required></textarea>
+              </div>
+              <div class="col-12">
+                <label style="color:#666;font-size:13px;margin-bottom:8px;display:block;">Your Rating (1-10)</label>
+                <div class="stars" id="starRating">
+                  ${[1,2,3,4,5,6,7,8,9,10].map(i => `<span class="star" data-val="${i}" onclick="setRating(${i})">★</span>`).join('')}
+                </div>
+                <span id="ratingLabel" style="font-size:12px;color:#555;margin-top:6px;display:block;">Click a star to rate</span>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-red px-4 py-2"><i class="bi bi-send me-2"></i>Submit Review</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- REVIEWS LIST -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 style="font-weight:700;">All Reviews</h5>
+          <select id="movieFilter" class="filter-btn" style="border-radius:8px;">
+            <option value="">All Movies</option>
+          </select>
+        </div>
+        <div id="reviewsList">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="col-lg-4">
+        <div class="table-dark-custom p-4 mb-4">
+          <h6 style="font-weight:700;margin-bottom:16px;color:#b3b3b3;text-transform:uppercase;font-size:12px;letter-spacing:1px;">Top Rated Movies</h6>
+          <div id="topMovies"><div class="spinner mx-auto"></div></div>
+        </div>
+        <div class="table-dark-custom p-4">
+          <h6 style="font-weight:700;margin-bottom:16px;color:#b3b3b3;text-transform:uppercase;font-size:12px;letter-spacing:1px;">Review Stats</h6>
+          <div id="reviewStats" style="font-size:14px;color:#b3b3b3;line-height:2;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">CINEMAX</div>
+    <div class="footer-copy">© 2024 CineMax</div>
+  </footer>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let userRating = 0, movies = [];
+
+    async function init() {
+      const { data } = await api.getWithHeaders('/movies?pageSize=50');
+      movies = data;
+      const sel = document.getElementById('rMovieId');
+      const filter = document.getElementById('movieFilter');
+      movies.forEach(m => {
+        sel.innerHTML += `<option value="${m.movieID}">${m.title}</option>`;
+        filter.innerHTML += `<option value="${m.movieID}">${m.title}</option>`;
+      });
+      document.getElementById('topMovies').innerHTML = movies.slice(0,5).map((m,i) => `
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span style="color:#e50914;font-weight:800;font-size:18px;width:24px;">${i+1}</span>
+          <div style="flex:1;">
+            <a href="movie.html?id=${m.movieID}" style="color:#fff;font-size:13px;font-weight:600;text-decoration:none;">${m.title}</a>
+            <div style="font-size:11px;color:#666;">${m.releaseYear}</div>
+          </div>
+          <span style="color:#f5c518;font-weight:700;font-size:13px;">⭐ ${m.rating.toFixed(1)}</span>
+        </div>`).join('');
+      loadReviews();
+    }
+
+    async function loadReviews(movieId = '') {
+      document.getElementById('reviewsList').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+      try {
+        const path = `/reviews${movieId ? `?movieId=${movieId}` : ''}`;
+        const reviews = await api.get(path);
+        const avg = reviews.reduce((s, r) => s + r.userRating, 0) / (reviews.length || 1);
+        document.getElementById('reviewStats').innerHTML = `
+          <div>Total Reviews: <strong style="color:#fff;">${reviews.length}</strong></div>
+          <div>Avg Rating: <strong style="color:#f5c518;">⭐ ${avg.toFixed(1)}</strong></div>
+          <div>5-Star Reviews: <strong style="color:#46d369;">${reviews.filter(r=>r.userRating>=9).length}</strong></div>`;
+        if (!reviews.length) {
+          document.getElementById('reviewsList').innerHTML = '<div class="empty-state"><i class="bi bi-chat"></i><h3>No reviews yet</h3></div>';
+          return;
+        }
+        document.getElementById('reviewsList').innerHTML = reviews.map(r => `
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">${(r.username||'A')[0].toUpperCase()}</div>
+              <div>
+                <div class="review-username">${r.username}</div>
+                <div class="review-date">${formatDate(r.reviewDate)}</div>
+              </div>
+              <div class="review-rating ms-auto"><i class="bi bi-star-fill me-1"></i>${r.userRating.toFixed(1)}</div>
+            </div>
+            <p class="review-text">${r.commentText}</p>
+          </div>`).join('');
+      } catch (e) {
+        document.getElementById('reviewsList').innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load</h3></div>';
+      }
+    }
+
+    function setRating(val) {
+      userRating = val;
+      document.querySelectorAll('#starRating .star').forEach((s, i) => s.classList.toggle('filled', i < val));
+      document.getElementById('ratingLabel').textContent = `${val}/10`;
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!userRating) { showToast('Please select a rating', 'error'); return; }
+      try {
+        await api.post('/reviews', {
+          movieID: parseInt(document.getElementById('rMovieId').value),
+          username: document.getElementById('rUsername').value,
+          email: document.getElementById('rEmail').value,
+          commentText: document.getElementById('rComment').value,
+          userRating
+        });
+        showToast('Review submitted successfully! 🎉');
+        e.target.reset(); userRating = 0;
+        document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('filled'));
+        loadReviews(document.getElementById('movieFilter').value);
+      } catch (ex) { showToast('Failed to submit', 'error'); }
+    });
+
+    document.getElementById('movieFilter').addEventListener('change', e => loadReviews(e.target.value));
+    init();
+  </script>
+</body>
+</html>

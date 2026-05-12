@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Details — CineMax</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-4 me-auto gap-1">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
+          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="movieDetail">
+    <div class="loading-spinner"><div class="spinner"></div></div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    let userRating = 0;
+
+    async function load() {
+      if (!id) { location.href = 'index.html'; return; }
+      try {
+        const m = await api.get(`/movies/${id}`);
+        document.title = `${m.title} — CineMax`;
+        render(m);
+      } catch (e) {
+        document.getElementById('movieDetail').innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><h3>Movie not found</h3></div>';
+      }
+    }
+
+    function render(m) {
+      document.getElementById('movieDetail').innerHTML = `
+        <!-- HERO -->
+        <div class="movie-detail-hero">
+          <div class="movie-backdrop" style="background-image:url('${m.posterUrl}')"></div>
+          <div class="movie-detail-content">
+            ${m.posterUrl
+              ? `<img class="movie-detail-poster" src="${m.posterUrl}" alt="${m.title}" onerror="this.src=''">`
+              : `<div class="movie-detail-poster d-flex align-items-center justify-content-center" style="background:#1a1a2e;border-radius:12px;aspect-ratio:2/3;font-size:80px;">🎬</div>`}
+            <div class="movie-detail-info flex-grow-1">
+              <div class="movie-meta mb-2">
+                <span class="movie-genre">${m.genreName}</span>
+                ${m.ageRestriction ? `<span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;font-size:12px;">${m.ageRestriction}</span>` : ''}
+                ${m.is3D ? `<span style="background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 8px;border-radius:4px;font-size:12px;">3D</span>` : ''}
+              </div>
+              <h1 class="movie-detail-info">${m.title}</h1>
+              <div class="movie-detail-meta">
+                <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating.toFixed(1)} IMDb</span>
+                <span class="meta-badge"><i class="bi bi-calendar me-1"></i>${m.releaseYear}</span>
+                <span class="meta-badge"><i class="bi bi-clock me-1"></i>${m.durationMinutes} min</span>
+                <span class="meta-badge"><i class="bi bi-translate me-1"></i>${m.languageName}</span>
+                ${m.discountPercent > 0 ? `<span class="meta-badge discount"><i class="bi bi-tag me-1"></i>-${m.discountPercent}% OFF</span>` : ''}
+              </div>
+              <p class="movie-description">${m.description}</p>
+              <div class="stats-row">
+                <div class="stat-box">
+                  <div class="stat-value">${m.directorName}</div>
+                  <div class="stat-label">Director</div>
+                </div>
+                ${m.mainActorName ? `<div class="stat-box"><div class="stat-value">${m.mainActorName}</div><div class="stat-label">Main Actor</div></div>` : ''}
+                <div class="stat-box">
+                  <div class="stat-value">${m.countryName}</div>
+                  <div class="stat-label">Country</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value">${m.productionCompany}</div>
+                  <div class="stat-label">Studio</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOX OFFICE -->
+        <div class="movies-section">
+          <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+              <div class="stat-box text-center">
+                <div class="stat-value text-warning">${formatMoney(m.budget)}</div>
+                <div class="stat-label">Budget</div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="stat-box text-center">
+                <div class="stat-value" style="color:#46d369">${formatMoney(m.boxOffice)}</div>
+                <div class="stat-label">Box Office</div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="stat-box text-center">
+                <div class="stat-value" style="color:#f5c518">${m.iMDbRating ? m.iMDbRating.toFixed(1) : m.rating.toFixed(1)}</div>
+                <div class="stat-label">IMDb Rating</div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="stat-box text-center">
+                <div class="stat-value" style="color:#fa320a">${m.rottenTomatoes ? m.rottenTomatoes + '%' : 'N/A'}</div>
+                <div class="stat-label">Rotten Tomatoes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RATING BARS -->
+          <div class="row g-3 mb-5">
+            <div class="col-md-6">
+              <div class="table-dark-custom p-4">
+                <h5 class="mb-4" style="font-weight:700;">Ratings Overview</h5>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span style="width:120px;font-size:13px;color:#b3b3b3;">IMDb</span>
+                  <div class="rating-bar"><div class="rating-fill gold" style="width:${(m.iMDbRating||m.rating)*10}%"></div></div>
+                  <span style="width:40px;font-size:13px;color:#f5c518;font-weight:700;">${m.iMDbRating ? m.iMDbRating.toFixed(1) : m.rating.toFixed(1)}</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span style="width:120px;font-size:13px;color:#b3b3b3;">Rotten Tomatoes</span>
+                  <div class="rating-bar"><div class="rating-fill" style="width:${m.rottenTomatoes||0}%;background:linear-gradient(90deg,#fa320a,#ff6b47)"></div></div>
+                  <span style="width:40px;font-size:13px;color:#fa320a;font-weight:700;">${m.rottenTomatoes ? m.rottenTomatoes+'%' : 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="table-dark-custom p-4">
+                <h5 class="mb-4" style="font-weight:700;">Movie Info</h5>
+                <table class="w-100" style="font-size:14px;">
+                  <tr><td style="color:#666;padding:6px 0;width:140px;">Subtitles</td><td style="color:#b3b3b3;">${m.subtitleAvailable ? '✅ Available' : '❌ Not available'}</td></tr>
+                  <tr><td style="color:#666;padding:6px 0;">Format</td><td style="color:#b3b3b3;">${m.is3D ? '3D + 2D' : '2D'}</td></tr>
+                  <tr><td style="color:#666;padding:6px 0;">Language</td><td style="color:#b3b3b3;">${m.languageName}</td></tr>
+                  <tr><td style="color:#666;padding:6px 0;">Age Rating</td><td style="color:#b3b3b3;">${m.ageRestriction}</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAST -->
+          ${m.actors && m.actors.length ? `
+          <h2 class="section-title mb-4">Cast</h2>
+          <div class="actors-grid mb-5">
+            ${m.actors.map(a => `
+              <div class="actor-card">
+                ${a.photoUrl ? `<img class="actor-photo" src="${a.photoUrl}" alt="${a.fullName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                <div class="actor-photo-placeholder" ${a.photoUrl ? 'style="display:none"' : ''}>🎭</div>
+                <div class="actor-name">${a.fullName}</div>
+                <div class="actor-role">${a.roleName || 'Actor'}</div>
+                <div class="actor-meta">${a.age} yrs • ${a.countryName}</div>
+                ${a.oscarAwards > 0 ? `<div class="actor-meta" style="padding-bottom:12px;color:#f5c518;">🏆 ${a.oscarAwards} Oscar${a.oscarAwards>1?'s':''}</div>` : ''}
+              </div>`).join('')}
+          </div>` : ''}
+
+          <!-- REVIEWS -->
+          <h2 class="section-title mb-4">Reviews <span style="font-size:15px;color:#666;font-weight:400;">(${m.reviews ? m.reviews.length : 0})</span></h2>
+
+          <!-- REVIEW FORM -->
+          <div class="review-form-card mb-4">
+            <h4><i class="bi bi-pencil-square me-2" style="color:#e50914;"></i>Write a Review</h4>
+            <form id="reviewForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <input type="text" id="rUsername" class="form-control form-control-dark" placeholder="Your name" required>
+                </div>
+                <div class="col-md-6">
+                  <input type="email" id="rEmail" class="form-control form-control-dark" placeholder="Your email" required>
+                </div>
+                <div class="col-12">
+                  <textarea id="rComment" class="form-control form-control-dark" rows="3" placeholder="Share your thoughts about this movie..." required></textarea>
+                </div>
+                <div class="col-12">
+                  <label style="color:#666;font-size:13px;margin-bottom:8px;display:block;">Your Rating</label>
+                  <div class="stars" id="starRating">
+                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `<span class="star" data-val="${i}" onclick="setRating(${i})">★</span>`).join('')}
+                  </div>
+                  <span id="ratingLabel" style="font-size:13px;color:#666;margin-top:4px;display:block;">Click to rate</span>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn-red px-4 py-2">
+                    <i class="bi bi-send me-2"></i>Submit Review
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div id="reviewsList">
+            ${m.reviews && m.reviews.length ? m.reviews.map(r => renderReview(r)).join('') : '<div class="empty-state"><i class="bi bi-chat"></i><h3>No reviews yet</h3><p>Be the first to review!</p></div>'}
+          </div>
+        </div>
+
+        <footer>
+          <div class="footer-brand">CINEMAX</div>
+          <div class="footer-links"><a href="index.html">Home</a><a href="actors.html">Actors</a><a href="reviews.html">Reviews</a></div>
+          <div class="footer-copy">© 2024 CineMax</div>
+        </footer>
+      `;
+
+      document.getElementById('reviewForm').addEventListener('submit', submitReview);
+    }
+
+    function renderReview(r) {
+      return `<div class="review-card">
+        <div class="review-header">
+          <div class="review-avatar">${(r.username||'A')[0].toUpperCase()}</div>
+          <div>
+            <div class="review-username">${r.username}</div>
+            <div class="review-date">${formatDate(r.reviewDate)}</div>
+          </div>
+          <div class="review-rating ms-auto"><i class="bi bi-star-fill me-1"></i>${r.userRating.toFixed(1)}</div>
+        </div>
+        <p class="review-text">${r.commentText}</p>
+      </div>`;
+    }
+
+    function setRating(val) {
+      userRating = val;
+      document.querySelectorAll('#starRating .star').forEach((s, i) => s.classList.toggle('filled', i < val));
+      document.getElementById('ratingLabel').textContent = `${val}/10 — ${['','Terrible','Bad','Poor','Below Average','Average','Good','Very Good','Great','Excellent','Masterpiece'][val]}`;
+    }
+
+    async function submitReview(e) {
+      e.preventDefault();
+      if (!userRating) { showToast('Please select a rating', 'error'); return; }
+      try {
+        await api.post('/reviews', {
+          movieID: parseInt(id),
+          username: document.getElementById('rUsername').value,
+          email: document.getElementById('rEmail').value,
+          commentText: document.getElementById('rComment').value,
+          userRating
+        });
+        showToast('Review submitted! 🎉');
+        setTimeout(() => load(), 500);
+      } catch (e) { showToast('Failed to submit review', 'error'); }
+    }
+
+    load();
+  </script>
+</body>
+</html>
