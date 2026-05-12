@@ -46,6 +46,7 @@ const TRANSLATIONS = {
     back: '← Back',
     light: 'Light', dark: 'Dark',
     fav_added: 'added to favorites!', fav_removed: 'Removed from favorites',
+    signin: 'Sign In',
   },
   ru: {
     nav_home: 'Главная', nav_actors: 'Актёры', nav_reviews: 'Отзывы',
@@ -94,6 +95,7 @@ const TRANSLATIONS = {
     back: '← Назад',
     light: 'Светлая', dark: 'Тёмная',
     fav_added: 'добавлен в избранное!', fav_removed: 'Удалено из избранного',
+    signin: 'Войти',
   },
   kz: {
     nav_home: 'Басты', nav_actors: 'Актёрлар', nav_reviews: 'Пікірлер',
@@ -142,6 +144,7 @@ const TRANSLATIONS = {
     back: '← Артқа',
     light: 'Ашық', dark: 'Күңгірт',
     fav_added: 'таңдаулыға қосылды!', fav_removed: 'Таңдаулылардан жойылды',
+    signin: 'Кіру',
   }
 };
 

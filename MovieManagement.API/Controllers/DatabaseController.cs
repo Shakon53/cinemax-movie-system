@@ -85,7 +85,7 @@ public class DatabaseController : ControllerBase
             Movie = x.Movie != null ? x.Movie.Title : "",
             x.ActorID,
             Actor = x.Actor != null ? x.Actor.FullName : "",
-            x.RoleName, x.IsMainRole
+            x.RoleName, x.ScreenTimeMinutes
         }));
     }
 
@@ -112,7 +112,7 @@ public class DatabaseController : ControllerBase
         return Ok(ratings.Select(r => new {
             r.RatingID,
             Movie = r.Movie != null ? r.Movie.Title : "",
-            r.IMDbRating, r.RottenTomatoes, r.AudienceScore
+            r.IMDbRating, r.RottenTomatoes, r.Metacritic, r.ReviewCount
         }));
     }
 
@@ -125,7 +125,7 @@ public class DatabaseController : ControllerBase
         return Ok(discounts.Select(d => new {
             d.DiscountID,
             Movie = d.Movie != null ? d.Movie.Title : "",
-            d.DiscountPercent, d.StartDate, d.EndDate, d.IsActive
+            d.DiscountName, d.DiscountPercent, d.StartDate, d.EndDate
         }));
     }
 
@@ -134,11 +134,11 @@ public class DatabaseController : ControllerBase
     {
         var records = await _context.BoxOfficeRecords
             .Include(b => b.Movie)
-            .OrderBy(b => b.RecordID).ToListAsync();
+            .OrderBy(b => b.BoxOfficeID).ToListAsync();
         return Ok(records.Select(b => new {
-            b.RecordID,
+            b.BoxOfficeID,
             Movie = b.Movie != null ? b.Movie.Title : "",
-            b.OpeningWeekend, b.TotalGross, b.InternationalGross, b.RecordDate
+            b.OpeningWeekend, b.WorldwideGross, b.TicketsSold
         }));
     }
 
