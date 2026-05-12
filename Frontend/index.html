@@ -18,13 +18,16 @@
       </button>
       <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
-          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
-          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
-          <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-info-circle me-1"></i>About</a></li>
-          <li class="nav-item"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favorites <span id="favCount" style="background:#e50914;border-radius:10px;padding:1px 6px;font-size:11px;">0</span></a></li>
+          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-info-circle me-1"></i><span data-i18n="nav_about">About</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i><span data-i18n="nav_favorites">Favorites</span> <span id="favCount" style="background:#e50914;border-radius:10px;padding:1px 6px;font-size:11px;">0</span></a></li>
         </ul>
-        <button class="theme-toggle ms-2" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel">Light</span></button>
+        <div class="d-flex align-items-center gap-2 ms-3">
+          <div class="lang-switcher" id="langSwitcher"></div>
+          <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel" data-i18n="light">Light</span></button>
+        </div>
       </div>
     </div>
   </nav>
@@ -35,15 +38,15 @@
     <div class="featured-overlay"></div>
     <div class="featured-content">
       <div class="featured-badge"><i class="bi bi-trophy-fill me-1"></i>TOP RATED</div>
-      <h1 class="featured-title" id="featuredTitle">Loading...</h1>
+      <h1 class="featured-title" id="featuredTitle"><span data-i18n="hero_title">Discover <span>Amazing</span> Movies</span></h1>
       <div class="featured-meta" id="featuredMeta"></div>
       <p class="featured-desc" id="featuredDesc"></p>
       <div class="featured-actions">
         <a href="#" class="btn-featured-primary" id="featuredBtn"><i class="bi bi-play-fill me-2"></i>View Details</a>
         <div class="featured-stats">
-          <div class="fstat"><span id="statMovies">—</span><small>Movies</small></div>
-          <div class="fstat"><span id="statActors">—</span><small>Actors</small></div>
-          <div class="fstat"><span id="statDirectors">—</span><small>Directors</small></div>
+          <div class="fstat"><span id="statMovies">—</span><small data-i18n="stat_movies">Movies</small></div>
+          <div class="fstat"><span id="statActors">—</span><small data-i18n="stat_actors">Actors</small></div>
+          <div class="fstat"><span id="statDirectors">—</span><small data-i18n="stat_directors">Directors</small></div>
         </div>
       </div>
     </div>
@@ -54,10 +57,10 @@
     <div class="d-flex gap-3 align-items-center">
       <div class="position-relative flex-grow-1">
         <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search movies by title or description..." style="padding-left:44px;">
+        <input type="text" id="searchInput" class="search-bar" data-i18n="search_placeholder" data-i18n-attr="placeholder" placeholder="Search movies by title or description..." style="padding-left:44px;">
       </div>
       <select id="yearSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
-        <option value="">All Years</option>
+        <option value="" data-i18n="year_all">All Years</option>
         <option value="2023">2023</option>
         <option value="2021">2021</option>
         <option value="2015">2015</option>
@@ -70,9 +73,9 @@
         <option value="1994">1994</option>
       </select>
       <select id="sortSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="year">📅 Newest</option>
-        <option value="title">🔤 A-Z</option>
+        <option value="rating" data-i18n="sort_top">⭐ Top Rated</option>
+        <option value="year" data-i18n="sort_new">📅 Newest</option>
+        <option value="title" data-i18n="sort_az">🔤 A-Z</option>
       </select>
     </div>
     <div id="genreFilters" class="d-flex gap-2 mt-3 flex-wrap">
@@ -83,7 +86,7 @@
   <!-- MOVIES -->
   <section class="movies-section">
     <div class="d-flex align-items-center justify-content-between mb-4">
-      <h2 class="section-title mb-0">All Movies</h2>
+      <h2 class="section-title mb-0" data-i18n="section_movies">All Movies</h2>
       <span id="movieCount" class="text-secondary" style="font-size:14px;"></span>
     </div>
     <div id="moviesGrid" class="movies-grid">
@@ -125,6 +128,7 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/api.js"></script>
   <script>
     let currentPage = 1, totalCount = 0, currentGenre = '', currentSort = 'rating', searchTimeout;
@@ -207,6 +211,7 @@
       p.innerHTML = html;
     }
 
+    function onLangChange() { currentPage = 1; loadGenres(); loadMovies(); loadFeatured(); applyLang(); }
     function goPage(p) { currentPage = p; loadMovies(); window.scrollTo({top:0,behavior:'smooth'}); }
 
     document.getElementById('searchInput').addEventListener('input', () => {

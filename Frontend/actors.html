@@ -14,11 +14,12 @@
       <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-4 me-auto gap-1">
-          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
-          <li class="nav-item"><a class="nav-link active" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
-          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
-          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
+          <li class="nav-item"><a class="nav-link active" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i><span data-i18n="nav_admin">Admin</span></a></li>
         </ul>
+        <div class="lang-switcher" id="langSwitcher"></div>
       </div>
     </div>
   </nav>
@@ -64,6 +65,7 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/api.js"></script>
   <script>
     let allActors = [], currentGender = '', oscarsOnly = false;
@@ -130,6 +132,7 @@
 
     document.getElementById('actorSearch').addEventListener('input', applyFilters);
 
+    function onLangChange() { applyLang(); renderActors(allActors); }
     loadActors();
   </script>
 <script src="js/keepalive.js"></script></body>
