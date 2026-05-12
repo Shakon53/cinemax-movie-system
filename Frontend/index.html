@@ -21,7 +21,7 @@
           <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
-          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-info-circle me-1"></i>About</a></li>
           <li class="nav-item"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favorites <span id="favCount" style="background:#e50914;border-radius:10px;padding:1px 6px;font-size:11px;">0</span></a></li>
         </ul>
         <button class="theme-toggle ms-2" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel">Light</span></button>
@@ -29,19 +29,22 @@
     </div>
   </nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <h1>Discover <span>Amazing</span> Movies</h1>
-    <p>Explore thousands of films, ratings, and reviews</p>
-    <div class="d-flex gap-3 mt-4">
-      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
-        <i class="bi bi-film text-danger"></i> 10+ Movies
-      </div>
-      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
-        <i class="bi bi-people text-danger"></i> 10 Actors
-      </div>
-      <div class="d-flex align-items-center gap-2 text-secondary" style="font-size:14px;">
-        <i class="bi bi-star text-warning"></i> Top Rated Films
+  <!-- FEATURED HERO -->
+  <section class="featured-hero" id="featuredHero">
+    <div class="featured-backdrop" id="featuredBackdrop"></div>
+    <div class="featured-overlay"></div>
+    <div class="featured-content">
+      <div class="featured-badge"><i class="bi bi-trophy-fill me-1"></i>TOP RATED</div>
+      <h1 class="featured-title" id="featuredTitle">Loading...</h1>
+      <div class="featured-meta" id="featuredMeta"></div>
+      <p class="featured-desc" id="featuredDesc"></p>
+      <div class="featured-actions">
+        <a href="#" class="btn-featured-primary" id="featuredBtn"><i class="bi bi-play-fill me-2"></i>View Details</a>
+        <div class="featured-stats">
+          <div class="fstat"><span id="statMovies">—</span><small>Movies</small></div>
+          <div class="fstat"><span id="statActors">—</span><small>Actors</small></div>
+          <div class="fstat"><span id="statDirectors">—</span><small>Directors</small></div>
+        </div>
       </div>
     </div>
   </section>
@@ -80,14 +83,30 @@
 
   <!-- FOOTER -->
   <footer>
-    <div class="footer-brand">CINEMAX</div>
-    <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="actors.html">Actors</a>
-      <a href="reviews.html">Reviews</a>
-      <a href="admin.html">Admin</a>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">CINE<span style="color:#fff">MAX</span></div>
+        <p style="color:#666;font-size:13px;margin-top:8px;max-width:260px;">A full-stack Movie Management System built with ASP.NET Core 8 & Bootstrap 5.</p>
+      </div>
+      <div>
+        <div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Navigation</div>
+        <div class="footer-links">
+          <a href="index.html"><i class="bi bi-house me-1"></i>Home</a>
+          <a href="actors.html"><i class="bi bi-people me-1"></i>Actors</a>
+          <a href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a>
+          <a href="favorites.html"><i class="bi bi-heart me-1"></i>Favorites</a>
+        </div>
+      </div>
+      <div>
+        <div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">More</div>
+        <div class="footer-links">
+          <a href="about.html"><i class="bi bi-info-circle me-1"></i>About</a>
+          <a href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a>
+          <a href="https://github.com/Shakon53/cinemax-movie-system" target="_blank"><i class="bi bi-github me-1"></i>GitHub</a>
+        </div>
+      </div>
     </div>
-    <div class="footer-copy">© 2024 CineMax Movie Management System. Built with ASP.NET Core & Bootstrap 5.</div>
+    <div class="footer-copy">© 2025 CineMax. Built with ❤️ using ASP.NET Core 8, PostgreSQL & Bootstrap 5.</div>
   </footer>
 
   <div id="toastContainer" class="toast-container"></div>
@@ -142,6 +161,7 @@
             <button class="btn-fav ${favs.includes(m.movieID)?'active':''}" onclick="event.stopPropagation();toggleFav(${m.movieID},'${m.title.replace(/'/g,"'")}',this)" title="Add to favorites">${favs.includes(m.movieID)?'❤️':'🤍'}</button>
             ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
             <div class="movie-poster-placeholder" ${m.posterUrl ? 'style="display:none"' : ''}>🎬</div>
+            <div class="movie-card-overlay"><p class="overlay-desc">${m.description||''}</p></div>
             <div class="movie-info">
               <div class="movie-title" title="${m.title}">${m.title}</div>
               <div class="movie-meta">
@@ -204,6 +224,34 @@
       document.getElementById('themeLabel').textContent = 'Dark';
     }
 
+    async function loadFeatured() {
+      try {
+        const [topMovies, actors, directors] = await Promise.all([
+          api.getWithHeaders('/movies?pageSize=1&sortBy=rating'),
+          api.get('/actors'),
+          api.get('/directors')
+        ]);
+        const m = topMovies.data[0];
+        document.getElementById('statMovies').textContent = topMovies.total;
+        document.getElementById('statActors').textContent = actors.length;
+        document.getElementById('statDirectors').textContent = directors.length;
+        if (m) {
+          if (m.posterUrl) {
+            document.getElementById('featuredBackdrop').style.backgroundImage = `url('${m.posterUrl}')`;
+          }
+          document.getElementById('featuredTitle').textContent = m.title;
+          document.getElementById('featuredDesc').textContent = m.description?.substring(0,160) + '...';
+          document.getElementById('featuredBtn').href = `movie.html?id=${m.movieID}`;
+          document.getElementById('featuredMeta').innerHTML = `
+            <span class="featured-tag"><i class="bi bi-star-fill me-1" style="color:#f5c518"></i>${m.rating.toFixed(1)}</span>
+            <span class="featured-tag">${m.releaseYear}</span>
+            <span class="featured-tag">${m.genreName}</span>
+            <span class="featured-tag">${m.durationMinutes} min</span>`;
+        }
+      } catch(e) {}
+    }
+
+    loadFeatured();
     loadGenres();
     loadMovies();
     updateFavCount();
