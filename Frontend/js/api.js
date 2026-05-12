@@ -57,7 +57,11 @@ function formatMoney(n) {
 }
 
 function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  if (!d) return '';
+  const locale = (typeof currentLang !== 'undefined')
+    ? (currentLang === 'ru' ? 'ru-RU' : currentLang === 'kz' ? 'kk-KZ' : 'en-US')
+    : 'en-US';
+  return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function ratingStars(r) {

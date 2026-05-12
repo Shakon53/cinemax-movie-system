@@ -186,25 +186,3 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLangSwitcher('langSwitcher');
   applyLang();
 });
-
-function showToast(msg, type = 'success') {
-  const c = document.getElementById('toastContainer');
-  if (!c) return;
-  const d = document.createElement('div');
-  d.className = `toast-item ${type}`;
-  d.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill text-success' : 'x-circle-fill text-danger'}"></i> ${msg}`;
-  c.appendChild(d);
-  setTimeout(() => d.remove(), 3000);
-}
-
-function formatMoney(n) {
-  if (!n) return '$0';
-  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
-  return '$' + n.toLocaleString();
-}
-
-function formatDate(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : currentLang === 'kz' ? 'kk-KZ' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}

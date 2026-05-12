@@ -162,13 +162,17 @@
         const search = document.getElementById('searchInput').value;
         const sort = document.getElementById('sortSelect').value;
         const year = document.getElementById('yearSelect').value;
-        const params = new URLSearchParams({ page: currentPage, pageSize, sortBy: sort });
+        const params = new URLSearchParams({ page: currentPage, pageSize: year ? 100 : pageSize, sortBy: sort });
         if (search) params.append('search', search);
         if (currentGenre) params.append('genreId', currentGenre);
-        if (year) params.append('search', year);
-        const { data: movies, total } = await api.getWithHeaders(`/movies?${params}`);
+        let { data: movies, total } = await api.getWithHeaders(`/movies?${params}`);
+        if (year) {
+          movies = movies.filter(m => m.releaseYear == year);
+          total = movies.length;
+          movies = movies.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+        }
         totalCount = total;
-        document.getElementById('movieCount').textContent = `${total} movies found`;
+        document.getElementById('movieCount').textContent = `${total} ${t('movies_found')}`;
         if (!movies.length) {
           grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-film"></i><h3>No movies found</h3><p>Try adjusting your search or filters</p></div>';
           return;
