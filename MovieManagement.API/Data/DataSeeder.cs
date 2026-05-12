@@ -86,6 +86,8 @@ public static class DataSeeder
         await context.SaveChangesAsync();
         }
 
+        if (!context.Ratings.Any())
+        {
         var ratings = new List<Rating>
         {
             new() { MovieID = 1, IMDbRating = 8.8, RottenTomatoes = 87, Metacritic = 74, ReviewCount = 2400000 },
@@ -100,7 +102,11 @@ public static class DataSeeder
             new() { MovieID = 10, IMDbRating = 8.1, RottenTomatoes = 97, Metacritic = 90, ReviewCount = 1000000 },
         };
         await context.Ratings.AddRangeAsync(ratings);
+        await context.SaveChangesAsync();
+        }
 
+        if (!context.BoxOfficeRecords.Any())
+        {
         var boxOffices = new List<BoxOfficeRecord>
         {
             new() { MovieID = 1, OpeningWeekend = 62785337, WorldwideGross = 836848102, TicketsSold = 60000000 },
@@ -110,7 +116,11 @@ public static class DataSeeder
             new() { MovieID = 5, OpeningWeekend = 67165092, WorldwideGross = 1004558444, TicketsSold = 75000000 },
         };
         await context.BoxOfficeRecords.AddRangeAsync(boxOffices);
+        await context.SaveChangesAsync();
+        }
 
+        if (!context.Users.Any())
+        {
         var users = new List<User>
         {
             new() { Username = "john_doe", Email = "john@example.com", CountryID = 1, RegistrationDate = DateTime.UtcNow.AddDays(-100) },
@@ -119,7 +129,10 @@ public static class DataSeeder
         };
         await context.Users.AddRangeAsync(users);
         await context.SaveChangesAsync();
+        }
 
+        if (!context.Reviews.Any())
+        {
         var reviews = new List<Review>
         {
             new() { UserID = 1, MovieID = 1, CommentText = "Mind-blowing film! The concept of dreams within dreams is executed perfectly.", UserRating = 9.5, ReviewDate = DateTime.UtcNow.AddDays(-10) },
@@ -130,7 +143,11 @@ public static class DataSeeder
             new() { UserID = 3, MovieID = 7, CommentText = "Oppenheimer is a stunning achievement in filmmaking. Cillian Murphy deserved the Oscar.", UserRating = 9.0, ReviewDate = DateTime.UtcNow.AddDays(-3) },
         };
         await context.Reviews.AddRangeAsync(reviews);
+        await context.SaveChangesAsync();
+        }
 
+        if (!context.MovieActors.Any())
+        {
         var movieActors = new List<MovieActor>
         {
             new() { MovieID = 1, ActorID = 1, RoleName = "Dominic Cobb", ScreenTimeMinutes = 120 },
@@ -145,7 +162,11 @@ public static class DataSeeder
             new() { MovieID = 5, ActorID = 8, RoleName = "Bane", ScreenTimeMinutes = 60 },
         };
         await context.MovieActors.AddRangeAsync(movieActors);
+        await context.SaveChangesAsync();
+        }
 
+        if (!context.Discounts.Any())
+        {
         var discounts = new List<Discount>
         {
             new() { MovieID = 1, DiscountName = "Weekend Special", DiscountPercent = 20, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7) },
@@ -153,8 +174,8 @@ public static class DataSeeder
             new() { MovieID = 6, DiscountName = "All-Time Best Discount", DiscountPercent = 30, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) },
         };
         await context.Discounts.AddRangeAsync(discounts);
-
         await context.SaveChangesAsync();
+        }
     }
 }
 

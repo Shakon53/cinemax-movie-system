@@ -44,6 +44,7 @@ function renderUserNav() {
   } else {
     container.innerHTML = `<a href="auth.html" class="btn-signin"><i class="bi bi-person me-1"></i><span data-i18n="signin">Sign In</span></a>`;
   }
+  if (typeof applyLang === 'function') applyLang();
 }
 
 document.addEventListener('DOMContentLoaded', renderUserNav);
