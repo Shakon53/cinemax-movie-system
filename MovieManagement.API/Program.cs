@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MovieManagement.API.Data;
+using System.Linq;
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +24,12 @@ if (!string.IsNullOrEmpty(dbUrl))
     {
         var uri = new Uri(dbUrl);
         var userInfo = uri.UserInfo.Split(':');
+        var password = Uri.UnescapeDataString(string.Join(":", userInfo.Skip(1)));
         connStr = $"Host={uri.Host};Port={(uri.Port == -1 ? 5432 : uri.Port)};" +
                   $"Database={uri.AbsolutePath.TrimStart('/')};" +
-                  $"Username={userInfo[0]};Password={Uri.UnescapeDataString(userInfo[1])};" +
-                  $"SSL Mode=Require;Trust Server Certificate=true";
+                  $"Username={userInfo[0]};Password={password};" +
+                  $"SSL Mode=Require;Trust Server Certificate=true;" +
+                  $"No Reset On Close=true;Pooling=false;";
     }
     else
     {
