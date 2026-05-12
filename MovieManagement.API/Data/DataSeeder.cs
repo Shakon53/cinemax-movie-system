@@ -38,11 +38,11 @@ public static class DataSeeder
         {
         var directors = new List<Director>
         {
-            new() { FullName = "Christopher Nolan", BirthDate = new DateTime(1970, 7, 30), CountryID = 2, ExperienceYears = 25, AwardsCount = 12 },
-            new() { FullName = "James Cameron", BirthDate = new DateTime(1954, 8, 16), CountryID = 5, ExperienceYears = 35, AwardsCount = 15 },
-            new() { FullName = "Steven Spielberg", BirthDate = new DateTime(1946, 12, 18), CountryID = 1, ExperienceYears = 50, AwardsCount = 20 },
-            new() { FullName = "Denis Villeneuve", BirthDate = new DateTime(1967, 10, 3), CountryID = 5, ExperienceYears = 25, AwardsCount = 8 },
-            new() { FullName = "Martin Scorsese", BirthDate = new DateTime(1942, 11, 17), CountryID = 1, ExperienceYears = 55, AwardsCount = 18 },
+            new() { FullName = "Christopher Nolan", BirthDate = new DateTime(1970, 7, 30, 0, 0, 0, DateTimeKind.Utc), CountryID = 2, ExperienceYears = 25, AwardsCount = 12 },
+            new() { FullName = "James Cameron", BirthDate = new DateTime(1954, 8, 16, 0, 0, 0, DateTimeKind.Utc), CountryID = 5, ExperienceYears = 35, AwardsCount = 15 },
+            new() { FullName = "Steven Spielberg", BirthDate = new DateTime(1946, 12, 18, 0, 0, 0, DateTimeKind.Utc), CountryID = 1, ExperienceYears = 50, AwardsCount = 20 },
+            new() { FullName = "Denis Villeneuve", BirthDate = new DateTime(1967, 10, 3, 0, 0, 0, DateTimeKind.Utc), CountryID = 5, ExperienceYears = 25, AwardsCount = 8 },
+            new() { FullName = "Martin Scorsese", BirthDate = new DateTime(1942, 11, 17, 0, 0, 0, DateTimeKind.Utc), CountryID = 1, ExperienceYears = 55, AwardsCount = 18 },
         };
         await context.Directors.AddRangeAsync(directors);
         await context.SaveChangesAsync();
@@ -113,21 +113,21 @@ public static class DataSeeder
 
         var users = new List<User>
         {
-            new() { Username = "john_doe", Email = "john@example.com", CountryID = 1, RegistrationDate = DateTime.Now.AddDays(-100) },
-            new() { Username = "jane_smith", Email = "jane@example.com", CountryID = 2, RegistrationDate = DateTime.Now.AddDays(-80) },
-            new() { Username = "mike_jones", Email = "mike@example.com", CountryID = 1, RegistrationDate = DateTime.Now.AddDays(-60) },
+            new() { Username = "john_doe", Email = "john@example.com", CountryID = 1, RegistrationDate = DateTime.UtcNow.AddDays(-100) },
+            new() { Username = "jane_smith", Email = "jane@example.com", CountryID = 2, RegistrationDate = DateTime.UtcNow.AddDays(-80) },
+            new() { Username = "mike_jones", Email = "mike@example.com", CountryID = 1, RegistrationDate = DateTime.UtcNow.AddDays(-60) },
         };
         await context.Users.AddRangeAsync(users);
         await context.SaveChangesAsync();
 
         var reviews = new List<Review>
         {
-            new() { UserID = 1, MovieID = 1, CommentText = "Mind-blowing film! The concept of dreams within dreams is executed perfectly.", UserRating = 9.5, ReviewDate = DateTime.Now.AddDays(-10) },
-            new() { UserID = 2, MovieID = 1, CommentText = "One of the best sci-fi movies ever made. Nolan at his finest!", UserRating = 10.0, ReviewDate = DateTime.Now.AddDays(-8) },
-            new() { UserID = 3, MovieID = 2, CommentText = "A timeless classic. The love story combined with historical disaster is breathtaking.", UserRating = 9.0, ReviewDate = DateTime.Now.AddDays(-15) },
-            new() { UserID = 1, MovieID = 3, CommentText = "Interstellar is a masterpiece. The science and emotion are beautifully intertwined.", UserRating = 9.5, ReviewDate = DateTime.Now.AddDays(-5) },
-            new() { UserID = 2, MovieID = 5, CommentText = "The Dark Knight is the greatest superhero film ever. Heath Ledger's Joker is iconic.", UserRating = 10.0, ReviewDate = DateTime.Now.AddDays(-12) },
-            new() { UserID = 3, MovieID = 7, CommentText = "Oppenheimer is a stunning achievement in filmmaking. Cillian Murphy deserved the Oscar.", UserRating = 9.0, ReviewDate = DateTime.Now.AddDays(-3) },
+            new() { UserID = 1, MovieID = 1, CommentText = "Mind-blowing film! The concept of dreams within dreams is executed perfectly.", UserRating = 9.5, ReviewDate = DateTime.UtcNow.AddDays(-10) },
+            new() { UserID = 2, MovieID = 1, CommentText = "One of the best sci-fi movies ever made. Nolan at his finest!", UserRating = 10.0, ReviewDate = DateTime.UtcNow.AddDays(-8) },
+            new() { UserID = 3, MovieID = 2, CommentText = "A timeless classic. The love story combined with historical disaster is breathtaking.", UserRating = 9.0, ReviewDate = DateTime.UtcNow.AddDays(-15) },
+            new() { UserID = 1, MovieID = 3, CommentText = "Interstellar is a masterpiece. The science and emotion are beautifully intertwined.", UserRating = 9.5, ReviewDate = DateTime.UtcNow.AddDays(-5) },
+            new() { UserID = 2, MovieID = 5, CommentText = "The Dark Knight is the greatest superhero film ever. Heath Ledger's Joker is iconic.", UserRating = 10.0, ReviewDate = DateTime.UtcNow.AddDays(-12) },
+            new() { UserID = 3, MovieID = 7, CommentText = "Oppenheimer is a stunning achievement in filmmaking. Cillian Murphy deserved the Oscar.", UserRating = 9.0, ReviewDate = DateTime.UtcNow.AddDays(-3) },
         };
         await context.Reviews.AddRangeAsync(reviews);
 
@@ -148,9 +148,9 @@ public static class DataSeeder
 
         var discounts = new List<Discount>
         {
-            new() { MovieID = 1, DiscountName = "Weekend Special", DiscountPercent = 20, StartDate = DateTime.Now, EndDate = DateTime.Now.AddDays(7) },
-            new() { MovieID = 2, DiscountName = "Classic Movie Deal", DiscountPercent = 15, StartDate = DateTime.Now, EndDate = DateTime.Now.AddDays(14) },
-            new() { MovieID = 6, DiscountName = "All-Time Best Discount", DiscountPercent = 30, StartDate = DateTime.Now, EndDate = DateTime.Now.AddDays(30) },
+            new() { MovieID = 1, DiscountName = "Weekend Special", DiscountPercent = 20, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7) },
+            new() { MovieID = 2, DiscountName = "Classic Movie Deal", DiscountPercent = 15, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(14) },
+            new() { MovieID = 6, DiscountName = "All-Time Best Discount", DiscountPercent = 30, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(30) },
         };
         await context.Discounts.AddRangeAsync(discounts);
 
