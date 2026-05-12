@@ -19,22 +19,17 @@ var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 string connStr;
 if (!string.IsNullOrEmpty(dbUrl))
 {
-    // Handles both Render (postgresql://user:pass@host:port/db) and Supabase formats
-    if (dbUrl.StartsWith("postgresql://") || dbUrl.StartsWith("postgres://"))
-    {
-        var uri = new Uri(dbUrl);
-        var userInfo = uri.UserInfo.Split(':');
-        var password = Uri.UnescapeDataString(string.Join(":", userInfo.Skip(1)));
-        connStr = $"Host={uri.Host};Port={(uri.Port == -1 ? 5432 : uri.Port)};" +
-                  $"Database={uri.AbsolutePath.TrimStart('/')};" +
-                  $"Username={userInfo[0]};Password={password};" +
-                  $"SSL Mode=Require;Trust Server Certificate=true;" +
-                  $"No Reset On Close=true;Pooling=false;";
-    }
-    else
-    {
-        connStr = dbUrl;
-    }
+    var uri = new Uri(dbUrl.Replace("postgres://", "postgresql://"));
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var username = Uri.UnescapeDataString(userInfo[0]);
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var host = uri.Host;
+    var dbPort = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
+    connStr = $"Host={host};Port={dbPort};Database={database};" +
+              $"Username={username};Password={password};" +
+              $"SSL Mode=Require;Trust Server Certificate=true;" +
+              $"Include Error Detail=true;Timeout=30;Command Timeout=30;";
 }
 else
 {
