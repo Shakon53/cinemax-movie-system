@@ -50,9 +50,20 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
-    await context.Database.MigrateAsync();
-    await DataSeeder.SeedAsync(context);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
+        logger.LogInformation("Applying migrations...");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("Seeding data...");
+        await DataSeeder.SeedAsync(context);
+        logger.LogInformation("Database ready.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database initialization failed: {Message}", ex.Message);
+    }
 }
 
 app.UseSwagger();
@@ -65,5 +76,6 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", time = DateTime.UtcNow }));
 
 app.Run();
