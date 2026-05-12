@@ -81,7 +81,7 @@
                 ${m.ageRestriction ? `<span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;font-size:12px;">${m.ageRestriction}</span>` : ''}
                 ${m.is3D ? `<span style="background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 8px;border-radius:4px;font-size:12px;">3D</span>` : ''}
               </div>
-              <h1 class="movie-detail-info">${m.title}</h1>
+              <h1 class="movie-detail-info" style="font-size:36px;font-weight:900;">${m.title}</h1>
               <div class="movie-detail-meta">
                 <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating.toFixed(1)} IMDb</span>
                 <span class="meta-badge"><i class="bi bi-calendar me-1"></i>${m.releaseYear}</span>
@@ -90,6 +90,10 @@
                 ${m.discountPercent > 0 ? `<span class="meta-badge discount"><i class="bi bi-tag me-1"></i>-${m.discountPercent}% OFF</span>` : ''}
               </div>
               <p class="movie-description">${m.description}</p>
+              <div class="d-flex gap-2 mb-4" style="flex-wrap:wrap;">
+                <a href="movie.html?id=${m.movieID}" class="btn-red" style="padding:10px 24px;"><i class="bi bi-info-circle me-2"></i>Details</a>
+                ${m.trailerUrl ? `<button onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;"><i class="bi bi-play-circle me-2"></i>Watch Trailer</button>` : ''}
+              </div>
               <div class="stats-row">
                 <div class="stat-box" onclick="event.stopPropagation();window.location='director.html?id=${m.directorID}'" style="cursor:pointer;" title="View director">
                   <div class="stat-value" style="color:#e50914;">${m.directorName} <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i></div>
@@ -111,9 +115,15 @@
 
         <!-- TRAILER -->
         <div class="movies-section" id="trailerSection" style="display:none;">
-          <h2 class="section-title mb-4">🎬 Official Trailer</h2>
-          <div class="trailer-container">
-            <iframe id="trailerFrame" src="" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+          <h2 class="section-title mb-4"><i class="bi bi-play-circle me-2" style="color:#e50914"></i>Official Trailer</h2>
+          <div id="trailerThumb" class="trailer-thumb" onclick="playTrailer()">
+            <img id="trailerPoster" src="" alt="Trailer" style="width:100%;max-height:420px;object-fit:cover;border-radius:12px;display:block;">
+            <div class="trailer-play"><i class="bi bi-play-fill"></i></div>
+          </div>
+          <div id="trailerEmbed" style="display:none;">
+            <div class="trailer-container">
+              <iframe id="trailerFrame" src="" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
           </div>
         </div>
 
@@ -251,10 +261,16 @@
 
       if (m.trailerUrl) {
         document.getElementById('trailerSection').style.display = '';
-        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${m.trailerUrl}?rel=0`;
+        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${m.trailerUrl}?rel=0&autoplay=1`;
+        const thumb = `https://img.youtube.com/vi/${m.trailerUrl}/maxresdefault.jpg`;
+        document.getElementById('trailerPoster').src = thumb;
+        document.getElementById('trailerPoster').onerror = function() { this.src = `https://img.youtube.com/vi/${m.trailerUrl}/hqdefault.jpg`; };
       }
+    }
 
-      loadSimilar(m.genreID || m.genreName, m.movieID);
+    function playTrailer() {
+      document.getElementById('trailerThumb').style.display = 'none';
+      document.getElementById('trailerEmbed').style.display = '';
     }
 
     async function loadSimilar(genreId, currentId) {
@@ -313,6 +329,6 @@
     }
 
     load();
-  </script>
+    </script>
 <script src="js/keepalive.js"></script></body>
 </html>

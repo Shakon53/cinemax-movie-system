@@ -56,6 +56,19 @@
         <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
         <input type="text" id="searchInput" class="search-bar" placeholder="Search movies by title or description..." style="padding-left:44px;">
       </div>
+      <select id="yearSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
+        <option value="">All Years</option>
+        <option value="2023">2023</option>
+        <option value="2021">2021</option>
+        <option value="2015">2015</option>
+        <option value="2014">2014</option>
+        <option value="2013">2013</option>
+        <option value="2010">2010</option>
+        <option value="2009">2009</option>
+        <option value="2008">2008</option>
+        <option value="1997">1997</option>
+        <option value="1994">1994</option>
+      </select>
       <select id="sortSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
         <option value="rating">⭐ Top Rated</option>
         <option value="year">📅 Newest</option>
@@ -144,9 +157,11 @@
       try {
         const search = document.getElementById('searchInput').value;
         const sort = document.getElementById('sortSelect').value;
+        const year = document.getElementById('yearSelect').value;
         const params = new URLSearchParams({ page: currentPage, pageSize, sortBy: sort });
         if (search) params.append('search', search);
         if (currentGenre) params.append('genreId', currentGenre);
+        if (year) params.append('search', year);
         const { data: movies, total } = await api.getWithHeaders(`/movies?${params}`);
         totalCount = total;
         document.getElementById('movieCount').textContent = `${total} movies found`;
@@ -199,6 +214,7 @@
       searchTimeout = setTimeout(() => { currentPage = 1; loadMovies(); }, 400);
     });
     document.getElementById('sortSelect').addEventListener('change', () => { currentPage = 1; loadMovies(); });
+    document.getElementById('yearSelect').addEventListener('change', () => { currentPage = 1; loadMovies(); });
 
     // FAVORITES
     function getFavs() { return JSON.parse(localStorage.getItem('cinemax_favs') || '[]'); }

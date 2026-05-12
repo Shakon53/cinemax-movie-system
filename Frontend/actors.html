@@ -24,16 +24,26 @@
   </nav>
 
   <section class="hero" style="padding:50px 48px 40px;">
-    <h1>🎭 <span>Actors</span></h1>
-    <p>Meet the talented cast of our movie collection</p>
+    <h1>Meet the <span>Cast</span></h1>
+    <p>Talented actors from our movie collection</p>
+    <div class="d-flex gap-3 mt-4">
+      <div id="statOscars" style="font-size:14px;color:#b3b3b3;"><i class="bi bi-trophy-fill me-1" style="color:#f5c518"></i>Loading...</div>
+      <div style="font-size:14px;color:#b3b3b3;"><i class="bi bi-globe me-1" style="color:#e50914"></i>International Cast</div>
+    </div>
   </section>
 
   <div class="movies-section">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h2 class="section-title mb-0">All Actors</h2>
-      <div class="position-relative" style="width:280px;">
-        <i class="bi bi-search position-absolute" style="left:14px;top:50%;transform:translateY(-50%);color:#666;"></i>
-        <input type="text" id="actorSearch" class="search-bar" placeholder="Search actors..." style="padding-left:40px;padding-top:10px;padding-bottom:10px;">
+    <div class="d-flex align-items-center justify-content-between mb-4" style="flex-wrap:wrap;gap:12px;">
+      <h2 class="section-title mb-0">All Actors <span id="actorCount" style="font-size:14px;color:#666;font-weight:400;"></span></h2>
+      <div class="d-flex gap-2" style="flex-wrap:wrap;">
+        <button class="filter-btn active" onclick="filterGender('')" id="gAll">All</button>
+        <button class="filter-btn" onclick="filterGender('Male')" id="gMale"><i class="bi bi-person me-1"></i>Male</button>
+        <button class="filter-btn" onclick="filterGender('Female')" id="gFemale"><i class="bi bi-person-dress me-1"></i>Female</button>
+        <button class="filter-btn" onclick="filterOscars()" id="gOscar"><i class="bi bi-trophy me-1"></i>Oscar Winners</button>
+        <div class="position-relative">
+          <i class="bi bi-search position-absolute" style="left:14px;top:50%;transform:translateY(-50%);color:#666;"></i>
+          <input type="text" id="actorSearch" class="search-bar" placeholder="Search actors..." style="padding-left:40px;padding-top:10px;padding-bottom:10px;width:220px;">
+        </div>
       </div>
     </div>
 
@@ -43,9 +53,12 @@
   </div>
 
   <footer>
-    <div class="footer-brand">CINEMAX</div>
-    <div class="footer-links"><a href="index.html">Home</a><a href="actors.html">Actors</a><a href="reviews.html">Reviews</a></div>
-    <div class="footer-copy">© 2024 CineMax</div>
+    <div class="footer-inner">
+      <div><div class="footer-brand">CINE<span style="color:#fff">MAX</span></div><p style="color:#666;font-size:13px;margin-top:8px;">Full-stack Movie Management System.</p></div>
+      <div><div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Navigation</div><div class="footer-links"><a href="index.html"><i class="bi bi-house me-1"></i>Home</a><a href="actors.html"><i class="bi bi-people me-1"></i>Actors</a><a href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a><a href="favorites.html"><i class="bi bi-heart me-1"></i>Favorites</a></div></div>
+      <div><div style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">More</div><div class="footer-links"><a href="about.html"><i class="bi bi-info-circle me-1"></i>About</a><a href="admin.html"><i class="bi bi-shield me-1"></i>Admin</a></div></div>
+    </div>
+    <div class="footer-copy">© 2025 CineMax. Built with ❤️ using ASP.NET Core 8 & Bootstrap 5.</div>
   </footer>
 
   <div id="toastContainer" class="toast-container"></div>
@@ -53,11 +66,35 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/api.js"></script>
   <script>
-    let allActors = [];
+    let allActors = [], currentGender = '', oscarsOnly = false;
+
+    function filterGender(g) {
+      currentGender = g; oscarsOnly = false;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('g' + (g || 'All')).classList.add('active');
+      applyFilters();
+    }
+    function filterOscars() {
+      oscarsOnly = !oscarsOnly; currentGender = '';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (oscarsOnly) document.getElementById('gOscar').classList.add('active');
+      else document.getElementById('gAll').classList.add('active');
+      applyFilters();
+    }
+    function applyFilters() {
+      const q = document.getElementById('actorSearch').value.toLowerCase();
+      let filtered = allActors.filter(a => (!q || a.fullName.toLowerCase().includes(q) || a.countryName.toLowerCase().includes(q)));
+      if (currentGender) filtered = filtered.filter(a => a.gender === currentGender);
+      if (oscarsOnly) filtered = filtered.filter(a => a.oscarAwards > 0);
+      renderActors(filtered);
+    }
 
     async function loadActors() {
       try {
         allActors = await api.get('/actors');
+        const oscars = allActors.reduce((s, a) => s + (a.oscarAwards || 0), 0);
+        document.getElementById('statOscars').innerHTML = `<i class="bi bi-trophy-fill me-1" style="color:#f5c518"></i>${oscars} Oscar Awards Total`;
+        document.getElementById('actorCount').textContent = `(${allActors.length})`;
         renderActors(allActors);
       } catch (e) {
         document.getElementById('actorsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load actors</h3></div>';
@@ -91,10 +128,7 @@
         </div>`).join('');
     }
 
-    document.getElementById('actorSearch').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      renderActors(allActors.filter(a => a.fullName.toLowerCase().includes(q) || a.countryName.toLowerCase().includes(q)));
-    });
+    document.getElementById('actorSearch').addEventListener('input', applyFilters);
 
     loadActors();
   </script>
