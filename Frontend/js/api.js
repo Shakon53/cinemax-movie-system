@@ -1,6 +1,6 @@
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
-  : 'https://YOUR_RAILWAY_APP.up.railway.app/api';
+  : 'https://cinemax-api-2maf.onrender.com/api';
 
 const api = {
   async get(path) {
