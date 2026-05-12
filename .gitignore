@@ -1,0 +1,14 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.userprefs
+
+## Environment
+appsettings.Production.json
+.env
+
+## Node
+node_modules/
