@@ -16,9 +16,20 @@ var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 string connStr;
 if (!string.IsNullOrEmpty(dbUrl))
 {
-    var uri = new Uri(dbUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    connStr = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+    // Handles both Render (postgresql://user:pass@host:port/db) and Supabase formats
+    if (dbUrl.StartsWith("postgresql://") || dbUrl.StartsWith("postgres://"))
+    {
+        var uri = new Uri(dbUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        connStr = $"Host={uri.Host};Port={uri.Port == -1 ? 5432 : uri.Port};" +
+                  $"Database={uri.AbsolutePath.TrimStart('/')};" +
+                  $"Username={userInfo[0]};Password={Uri.UnescapeDataString(userInfo[1])};" +
+                  $"SSL Mode=Require;Trust Server Certificate=true";
+    }
+    else
+    {
+        connStr = dbUrl;
+    }
 }
 else
 {

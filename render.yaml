@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cinemax-api
+    runtime: docker
+    dockerfilePath: ./MovieManagement.API/Dockerfile
+    dockerContext: ./MovieManagement.API
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:8080
