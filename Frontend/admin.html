@@ -31,6 +31,7 @@
       <div class="admin-nav-item" onclick="showSection('actors')"><i class="bi bi-people"></i>Actors</div>
       <div class="admin-nav-item" onclick="showSection('reviews')"><i class="bi bi-chat-square"></i>Reviews</div>
       <div class="admin-nav-item" onclick="showSection('users')"><i class="bi bi-people-fill"></i>Users</div>
+      <div class="admin-nav-item" onclick="showSection('database')"><i class="bi bi-database"></i>Database</div>
       <div style="padding:20px 24px 8px;font-size:11px;color:#444;text-transform:uppercase;letter-spacing:1px;">Settings</div>
       <div class="admin-nav-item" onclick="showSection('add-movie')"><i class="bi bi-plus-circle"></i>Add Movie</div>
       <div class="admin-nav-item" onclick="showSection('add-actor')"><i class="bi bi-person-plus"></i>Add Actor</div>
@@ -66,6 +67,42 @@
             <input type="text" id="userSearch" class="search-bar" placeholder="Search users..." style="max-width:320px;padding:10px 16px;" oninput="filterUsers(this.value)">
           </div>
           <div id="usersTable" class="p-2"><div class="loading-spinner"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- DATABASE VIEWER -->
+      <div id="sec-database" style="display:none;">
+        <div class="d-flex align-items-center justify-content-between mb-4" style="flex-wrap:wrap;gap:12px;">
+          <div class="admin-title"><i class="bi bi-database me-2 text-danger"></i>Database Explorer</div>
+          <button onclick="loadDbSummary()" style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+        </div>
+
+        <!-- TABLE COUNTS -->
+        <div id="dbSummaryRow" class="row g-2 mb-4"></div>
+
+        <!-- TABLE TABS -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="dbTabs">
+          <button class="db-tab active" onclick="loadDbTable('users')" id="dbt-users"><i class="bi bi-people me-1"></i>Users</button>
+          <button class="db-tab" onclick="loadDbTable('movies')" id="dbt-movies"><i class="bi bi-film me-1"></i>Movies</button>
+          <button class="db-tab" onclick="loadDbTable('actors')" id="dbt-actors"><i class="bi bi-person-badge me-1"></i>Actors</button>
+          <button class="db-tab" onclick="loadDbTable('directors')" id="dbt-directors"><i class="bi bi-camera-reels me-1"></i>Directors</button>
+          <button class="db-tab" onclick="loadDbTable('genres')" id="dbt-genres"><i class="bi bi-tags me-1"></i>Genres</button>
+          <button class="db-tab" onclick="loadDbTable('countries')" id="dbt-countries"><i class="bi bi-globe me-1"></i>Countries</button>
+          <button class="db-tab" onclick="loadDbTable('reviews')" id="dbt-reviews"><i class="bi bi-chat-square me-1"></i>Reviews</button>
+          <button class="db-tab" onclick="loadDbTable('movieactors')" id="dbt-movieactors"><i class="bi bi-link me-1"></i>MovieActors</button>
+          <button class="db-tab" onclick="loadDbTable('ratings')" id="dbt-ratings"><i class="bi bi-star me-1"></i>Ratings</button>
+          <button class="db-tab" onclick="loadDbTable('discounts')" id="dbt-discounts"><i class="bi bi-tag me-1"></i>Discounts</button>
+          <button class="db-tab" onclick="loadDbTable('boxoffice')" id="dbt-boxoffice"><i class="bi bi-cash me-1"></i>BoxOffice</button>
+        </div>
+
+        <div class="table-dark-custom">
+          <div style="padding:12px 16px;display:flex;align-items:center;justify-content:between;gap:12px;">
+            <input type="text" id="dbSearch" class="search-bar" placeholder="Search in table..." style="max-width:300px;padding:8px 14px;" oninput="dbSearchFilter(this.value)">
+            <span id="dbRowCount" style="font-size:13px;color:#666;margin-left:12px;"></span>
+          </div>
+          <div id="dbTableContainer" style="overflow-x:auto;">
+            <div class="loading-spinner p-4"><div class="spinner"></div></div>
+          </div>
         </div>
       </div>
 
@@ -193,6 +230,7 @@
       if (name === 'actors') loadActorsTable();
       if (name === 'reviews') loadReviewsTable();
       if (name === 'users') loadUsersTable();
+      if (name === 'database') { loadDbSummary(); loadDbTable('users'); }
       if (name === 'dashboard') loadDashboard();
     }
 
@@ -440,6 +478,98 @@
       confirmAction = async () => { await api.delete(`/auth/users/${id}`); showToast('User deleted'); loadUsersTable(); };
       confirmModal.show();
     }
+
+    // ===== DATABASE VIEWER =====
+    const DB_LABELS = {
+      users: 'Users', movies: 'Movies', actors: 'Actors', directors: 'Directors',
+      genres: 'Genres', countries: 'Countries', reviews: 'Reviews',
+      movieactors: 'Movie Actors', ratings: 'Ratings', discounts: 'Discounts', boxoffice: 'Box Office Records'
+    };
+    const DB_ICONS = {
+      users: '#38bdf8', movies: '#e50914', actors: '#46d369', directors: '#a78bfa',
+      genres: '#f59e0b', countries: '#ec4899', reviews: '#f5c518',
+      movieactors: '#6ee7b7', ratings: '#fbbf24', discounts: '#34d399', boxoffice: '#fb923c'
+    };
+    let dbCurrentTable = 'users', dbAllRows = [], dbColumns = [];
+
+    async function loadDbSummary() {
+      try {
+        const s = await api.get('/database/summary');
+        const tables = [
+          ['users','Users',s.Users], ['movies','Movies',s.Movies], ['actors','Actors',s.Actors],
+          ['directors','Directors',s.Directors], ['genres','Genres',s.Genres],
+          ['countries','Countries',s.Countries], ['reviews','Reviews',s.Reviews],
+          ['movieactors','MovieActors',s.MovieActors], ['ratings','Ratings',s.Ratings],
+          ['discounts','Discounts',s.Discounts], ['boxoffice','BoxOffice',s.BoxOfficeRecords]
+        ];
+        document.getElementById('dbSummaryRow').innerHTML = tables.map(([key, label, count]) => `
+          <div class="col-6 col-md-3 col-lg-2">
+            <div class="stat-card" onclick="loadDbTable('${key}')" style="cursor:pointer;border:1px solid ${DB_ICONS[key]}22;">
+              <div class="stat-num" style="color:${DB_ICONS[key]};font-size:24px;">${count}</div>
+              <div class="stat-lbl" style="font-size:11px;">${label}</div>
+            </div>
+          </div>`).join('');
+      } catch(e) {}
+    }
+
+    async function loadDbTable(table) {
+      dbCurrentTable = table;
+      document.querySelectorAll('.db-tab').forEach(b => b.classList.remove('active'));
+      const tab = document.getElementById('dbt-' + table);
+      if (tab) tab.classList.add('active');
+      document.getElementById('dbTableContainer').innerHTML = '<div class="loading-spinner p-4"><div class="spinner"></div></div>';
+      document.getElementById('dbSearch').value = '';
+      try {
+        dbAllRows = await api.get('/database/' + table);
+        if (!dbAllRows.length) {
+          document.getElementById('dbTableContainer').innerHTML = '<div class="empty-state p-4"><i class="bi bi-table"></i><h3>No records</h3></div>';
+          document.getElementById('dbRowCount').textContent = '0 rows';
+          return;
+        }
+        dbColumns = Object.keys(dbAllRows[0]);
+        renderDbTable(dbAllRows);
+      } catch(e) {
+        document.getElementById('dbTableContainer').innerHTML = '<div class="empty-state p-4"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load</h3></div>';
+      }
+    }
+
+    function renderDbTable(rows) {
+      document.getElementById('dbRowCount').textContent = `${rows.length} rows`;
+      if (!rows.length) {
+        document.getElementById('dbTableContainer').innerHTML = '<div class="empty-state p-4"><i class="bi bi-search"></i><h3>No results</h3></div>';
+        return;
+      }
+      const cols = Object.keys(rows[0]);
+      const isPassCol = (c) => c.toLowerCase().includes('password') || c.toLowerCase().includes('hash');
+      document.getElementById('dbTableContainer').innerHTML = `
+        <table class="table table-dark table-hover mb-0" style="font-size:13px;white-space:nowrap;">
+          <thead><tr style="position:sticky;top:0;background:#1a1a1a;">
+            ${cols.map(c => `<th style="padding:12px 16px;color:${isPassCol(c)?'#e50914':'#888'};font-weight:600;border-bottom:1px solid #2a2a2a;">
+              ${isPassCol(c)?'<i class="bi bi-lock-fill me-1"></i>':''} ${c}
+            </th>`).join('')}
+          </tr></thead>
+          <tbody>${rows.map(row => `<tr>${cols.map(c => {
+            let val = row[c];
+            let display = val === null || val === undefined ? '<span style="color:#444;">NULL</span>' : String(val);
+            if (isPassCol(c) && val) display = `<span style="font-family:monospace;font-size:11px;color:#e50914;background:rgba(229,9,20,0.1);padding:2px 6px;border-radius:4px;" title="${val}">${val.substring(0,16)}…</span>`;
+            else if (c.toLowerCase().includes('url') && val) display = val.startsWith('http') ? `<a href="${val}" target="_blank" style="color:#38bdf8;max-width:120px;display:inline-block;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">${val.substring(0,30)}…</a>` : display;
+            else if (c.toLowerCase().includes('date') && val) display = `<span style="color:#888;">${new Date(val).toLocaleString()}</span>`;
+            else if (typeof val === 'boolean') display = val ? '<span style="color:#46d369;">✓ Yes</span>' : '<span style="color:#e50914;">✗ No</span>';
+            else if (typeof val === 'number') display = `<span style="color:#f5c518;">${val.toLocaleString()}</span>`;
+            else if (typeof val === 'string' && val.length > 60) display = `<span title="${val}">${val.substring(0,60)}…</span>`;
+            return `<td style="padding:10px 16px;border-bottom:1px solid #1e1e1e;max-width:200px;">${display}</td>`;
+          }).join('')}</tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    function dbSearchFilter(q) {
+      if (!q.trim()) { renderDbTable(dbAllRows); return; }
+      const filtered = dbAllRows.filter(row =>
+        Object.values(row).some(v => v !== null && String(v).toLowerCase().includes(q.toLowerCase()))
+      );
+      renderDbTable(filtered);
+    }
+    // ===========================
 
     loadMeta();
     loadDashboard();
