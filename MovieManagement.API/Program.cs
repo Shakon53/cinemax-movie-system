@@ -74,7 +74,7 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", time = DateTime.UtcNow }));
+app.MapMethods("/health", ["GET", "HEAD"], () => Results.Ok(new { status = "healthy", time = DateTime.UtcNow }));
 app.MapGet("/api/reseed", async (MovieDbContext db) => {
     try {
         await DataSeeder.SeedAsync(db);
