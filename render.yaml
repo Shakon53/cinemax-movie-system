@@ -3,7 +3,6 @@ services:
     name: cinemax-api
     runtime: docker
     dockerfilePath: ./MovieManagement.API/Dockerfile
-    dockerContext: ./MovieManagement.API
     plan: free
     envVars:
       - key: DATABASE_URL
