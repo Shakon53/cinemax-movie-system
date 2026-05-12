@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movie Details — CineMax</title>
+  <title id="pageTitle">Movie Details — CineMax</title>
+  <meta name="description" id="pageDesc" content="Watch movie details, cast, reviews and trailers on CineMax">
+  <meta property="og:title" id="ogTitle" content="CineMax">
+  <meta property="og:image" id="ogImage" content="">
+  <meta property="og:type" content="video.movie">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
@@ -23,8 +27,24 @@
     </div>
   </nav>
 
+  <div style="padding:16px 24px;"><a href="javascript:history.back()" style="color:var(--text-muted);font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;"><i class="bi bi-arrow-left"></i> Back</a></div>
+
   <div id="movieDetail">
-    <div class="loading-spinner"><div class="spinner"></div></div>
+    <div style="padding:24px;">
+      <div style="background:var(--bg-secondary);border-radius:16px;overflow:hidden;">
+        <div style="display:flex;gap:0;">
+          <div class="skeleton" style="width:300px;min-height:420px;flex-shrink:0;"></div>
+          <div style="flex:1;padding:40px;">
+            <div class="skeleton skeleton-line" style="width:60%;height:32px;margin:0 0 16px 0;"></div>
+            <div class="skeleton skeleton-line medium" style="margin:0 0 12px 0;"></div>
+            <div class="skeleton skeleton-line" style="width:40%;margin:0 0 24px 0;"></div>
+            <div class="skeleton skeleton-line medium"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="toastContainer" class="toast-container"></div>
@@ -71,8 +91,8 @@
               </div>
               <p class="movie-description">${m.description}</p>
               <div class="stats-row">
-                <div class="stat-box">
-                  <div class="stat-value">${m.directorName}</div>
+                <div class="stat-box" onclick="event.stopPropagation();window.location='director.html?id=${m.directorID}'" style="cursor:pointer;" title="View director">
+                  <div class="stat-value" style="color:#e50914;">${m.directorName} <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i></div>
                   <div class="stat-label">Director</div>
                 </div>
                 ${m.mainActorName ? `<div class="stat-box"><div class="stat-value">${m.mainActorName}</div><div class="stat-label">Main Actor</div></div>` : ''}
@@ -209,6 +229,12 @@
           </div>
         </div>
 
+        <!-- SIMILAR MOVIES -->
+        <div class="movies-section" id="similarSection">
+          <h2 class="section-title mb-4">🎬 You May Also Like</h2>
+          <div id="similarGrid" class="movies-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"></div>
+        </div>
+
         <footer>
           <div class="footer-brand">CINEMAX</div>
           <div class="footer-links"><a href="index.html">Home</a><a href="actors.html">Actors</a><a href="reviews.html">Reviews</a></div>
@@ -216,12 +242,38 @@
         </footer>
       `;
 
+      document.title = `${m.title} (${m.releaseYear}) — CineMax`;
+      document.getElementById('pageDesc').content = m.description;
+      document.getElementById('ogTitle').content = `${m.title} — CineMax`;
+      document.getElementById('ogImage').content = m.posterUrl;
+
       document.getElementById('reviewForm').addEventListener('submit', submitReview);
 
       if (m.trailerUrl) {
         document.getElementById('trailerSection').style.display = '';
         document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${m.trailerUrl}?rel=0`;
       }
+
+      loadSimilar(m.genreID || m.genreName, m.movieID);
+    }
+
+    async function loadSimilar(genreId, currentId) {
+      try {
+        const params = new URLSearchParams({ page: 1, pageSize: 6, sortBy: 'rating' });
+        if (genreId) params.append('genreId', genreId);
+        const { data } = await api.getWithHeaders(`/movies?${params}`);
+        const filtered = data.filter(x => x.movieID !== currentId).slice(0, 5);
+        const grid = document.getElementById('similarGrid');
+        if (!filtered.length || !grid) return;
+        grid.innerHTML = filtered.map(m => `
+          <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'" style="cursor:pointer;">
+            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
+            <div class="movie-info">
+              <div class="movie-title" style="font-size:13px;">${m.title}</div>
+              <span class="movie-rating" style="font-size:12px;"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
+            </div>
+          </div>`).join('');
+      } catch(e) {}
     }
 
     function renderReview(r) {

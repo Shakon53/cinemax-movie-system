@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — CineMax</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-4 me-auto gap-1">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
+          <li class="nav-item"><a class="nav-link active" href="about.html"><i class="bi bi-info-circle me-1"></i>About</a></li>
+        </ul>
+        <button class="theme-toggle ms-2" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel">Light</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="movies-section" style="max-width:800px;margin:0 auto;">
+    <div class="text-center mb-5">
+      <h1 style="font-size:clamp(32px,6vw,56px);font-weight:900;">CINE<span style="color:#e50914;">MAX</span></h1>
+      <p style="color:var(--text-muted);font-size:18px;">Movie Management System</p>
+    </div>
+
+    <div class="table-dark-custom p-4 mb-4">
+      <h3 class="mb-3"><i class="bi bi-info-circle me-2 text-danger"></i>About the Project</h3>
+      <p style="color:var(--text-secondary);line-height:1.8;">
+        CineMax is a full-stack Movie Management System built as a graduation/course project. 
+        It allows users to browse movies, read and write reviews, explore actors and directors, 
+        and manage content through an admin panel.
+      </p>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="table-dark-custom p-4 h-100">
+          <h5 class="mb-3"><i class="bi bi-server me-2 text-danger"></i>Backend</h5>
+          <ul style="color:var(--text-secondary);list-style:none;padding:0;line-height:2;">
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>ASP.NET Core 8 Web API</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>Entity Framework Core</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>PostgreSQL (Supabase)</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>REST API + Swagger</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>Docker + Render hosting</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="table-dark-custom p-4 h-100">
+          <h5 class="mb-3"><i class="bi bi-display me-2 text-danger"></i>Frontend</h5>
+          <ul style="color:var(--text-secondary);list-style:none;padding:0;line-height:2;">
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>HTML5 + CSS3</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>Bootstrap 5</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>Vanilla JavaScript</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>TMDB Posters + YouTube Trailers</li>
+            <li><i class="bi bi-check-circle me-2" style="color:#46d369;"></i>Netlify hosting</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-md-3"><div class="stat-box text-center"><div class="stat-value text-danger">10+</div><div class="stat-label">Movies</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-box text-center"><div class="stat-value" style="color:#818cf8;">10</div><div class="stat-label">Actors</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-box text-center"><div class="stat-value text-warning">5</div><div class="stat-label">Directors</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-box text-center"><div class="stat-value" style="color:#46d369;">REST</div><div class="stat-label">API Type</div></div></div>
+    </div>
+
+    <div class="table-dark-custom p-4 text-center">
+      <h5 class="mb-3"><i class="bi bi-github me-2"></i>Source Code</h5>
+      <a href="https://github.com/Shakon53/cinemax-movie-system" target="_blank" class="btn-red px-4 py-2" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+        <i class="bi bi-github"></i> View on GitHub
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-brand">CINEMAX</div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="actors.html">Actors</a><a href="reviews.html">Reviews</a><a href="about.html">About</a></div>
+    <div class="footer-copy">© 2024 CineMax Movie Management System</div>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-mode');
+      localStorage.setItem('cinemax_theme', isLight ? 'light' : 'dark');
+      document.getElementById('themeIcon').className = isLight ? 'bi bi-moon' : 'bi bi-sun';
+      document.getElementById('themeLabel').textContent = isLight ? 'Dark' : 'Light';
+    }
+    if (localStorage.getItem('cinemax_theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('themeIcon').className = 'bi bi-moon';
+      document.getElementById('themeLabel').textContent = 'Dark';
+    }
+  </script>
+<script src="js/keepalive.js"></script></body>
+</html>
