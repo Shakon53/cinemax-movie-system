@@ -75,5 +75,16 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", time = DateTime.UtcNow }));
+app.MapGet("/api/reseed", async (MovieDbContext db) => {
+    try {
+        await DataSeeder.SeedAsync(db);
+        var movies = db.Movies.Count();
+        var actors = db.Actors.Count();
+        var directors = db.Directors.Count();
+        return Results.Ok(new { success = true, movies, actors, directors });
+    } catch (Exception ex) {
+        return Results.Ok(new { success = false, error = ex.Message, inner = ex.InnerException?.Message });
+    }
+});
 
 app.Run();
