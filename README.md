@@ -1,5 +1,7 @@
 # CineMax — Supabase + Netlify
 
+**[Документация проекта на русском: функции, состояние, архитектура и обновление](DOCUMENTATION.md).**
+
 Текущий вариант без VPS: [настройка Supabase, регистрации и адреса сайта](SETUP-SUPABASE.md).
 
 Публичная папка: `Frontend`. Проверки: `npm ci` и `npm test`.
