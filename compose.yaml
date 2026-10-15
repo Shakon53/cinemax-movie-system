@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cinemax
+      POSTGRES_USER: cinemax
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinemax -d cinemax"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  app:
+    build:
+      context: .
+      dockerfile: MovieManagement.API/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=cinemax;Username=cinemax;Password=${POSTGRES_PASSWORD}
+      Admin__Email: ${ADMIN_EMAIL:?Set ADMIN_EMAIL}
+      Admin__Password: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+      DataProtection__Path: /app/keys
+    volumes:
+      - session_keys:/app/keys
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS to your domain}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+volumes:
+  postgres_data:
+  session_keys:
+  caddy_data:
+  caddy_config:

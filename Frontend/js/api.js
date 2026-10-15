@@ -1,41 +1,44 @@
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
-  : 'https://cinemax-api-2maf.onrender.com/api';
+const API_BASE = window.CINEMAX_API_BASE || '/api';
 
 const api = {
   async get(path) {
-    const res = await fetch(`${API_BASE}${path}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    if (window.CINEMAX_BACKEND !== 'dotnet') return supabaseApi.get(path);
+    const res = await fetch(`${API_BASE}${path}`, { credentials: 'same-origin' });
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.message || (res.status === 401 ? 'Войдите в аккаунт.' : res.status === 403 ? 'Недостаточно прав.' : 'Ошибка ' + res.status)); }
+    return res.status === 204 ? null : res.json();
   },
   async getWithHeaders(path) {
-    const res = await fetch(`${API_BASE}${path}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (window.CINEMAX_BACKEND !== 'dotnet') return supabaseApi.getWithHeaders(path);
+    const res = await fetch(`${API_BASE}${path}`, { credentials: 'same-origin' });
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.message || (res.status === 401 ? 'Войдите в аккаунт.' : res.status === 403 ? 'Недостаточно прав.' : 'Ошибка ' + res.status)); }
     const data = await res.json();
     const total = res.headers.get('X-Total-Count');
     return { data, total: parseInt(total || '0') };
   },
   async post(path, body) {
+    if (window.CINEMAX_BACKEND !== 'dotnet') return supabaseApi.post(path, body);
     const res = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
+      method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.message || (res.status === 401 ? 'Войдите в аккаунт.' : res.status === 403 ? 'Недостаточно прав.' : 'Ошибка ' + res.status)); }
+    return res.status === 204 ? null : res.json();
   },
   async put(path, body) {
+    if (window.CINEMAX_BACKEND !== 'dotnet') return supabaseApi.put(path, body);
     const res = await fetch(`${API_BASE}${path}`, {
-      method: 'PUT',
+      method: 'PUT', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.message || (res.status === 401 ? 'Войдите в аккаунт.' : res.status === 403 ? 'Недостаточно прав.' : 'Ошибка ' + res.status)); }
     return res.status === 204 ? null : res.json();
   },
   async delete(path) {
-    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (window.CINEMAX_BACKEND !== 'dotnet') return supabaseApi.delete(path);
+    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (!res.ok) { const error = await res.json().catch(() => ({})); throw new Error(error.message || (res.status === 401 ? 'Войдите в аккаунт.' : res.status === 403 ? 'Недостаточно прав.' : 'Ошибка ' + res.status)); }
   }
 };
 
@@ -44,7 +47,7 @@ function showToast(msg, type = 'success') {
   if (!tc) return;
   const t = document.createElement('div');
   t.className = `toast-item ${type}`;
-  t.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'x-circle-fill'}"></i> ${msg}`;
+  t.textContent = msg;
   tc.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
@@ -69,4 +72,25 @@ function ratingStars(r) {
   return Array.from({length: 5}, (_, i) =>
     `<i class="bi bi-star${i < full ? '-fill' : ''}" style="color:${i < full ? '#f5c518' : '#555'}; font-size:12px;"></i>`
   ).join('');
+}
+
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function safeUrl(value) { try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch { return ''; } }
+function youtubeVideoId(value) {
+  const input = String(value || '').trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
+  try {
+    const url = new URL(input);
+    if (url.protocol !== 'https:') return '';
+    let id = '';
+    if (url.hostname === 'youtu.be') id = url.pathname.slice(1);
+    if (['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(url.hostname)) {
+      id = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|shorts)\/([^/]+)$/)?.[1] || '';
+    }
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
+  } catch { return ''; }
+}
+function renderReviewText(review) {
+  const content = '<p class="review-text">' + escapeHtml(review.commentText) + '</p>';
+  return review.containsSpoilers ? '<details class="spoiler-review"><summary><i class="bi bi-eye-slash me-1"></i>Содержит спойлеры — показать отзыв</summary>' + content + '</details>' : content;
 }

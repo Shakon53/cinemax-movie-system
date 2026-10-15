@@ -16,4 +16,5 @@ RUN dotnet publish "MovieManagement.API.csproj" -c Release -o /app/publish /p:Us
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY Frontend/ ./wwwroot/
 ENTRYPOINT ["dotnet", "MovieManagement.API.dll"]

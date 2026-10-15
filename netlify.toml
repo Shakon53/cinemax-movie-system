@@ -1,6 +1,18 @@
 [build]
   publish = "Frontend"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/js/config.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 [[redirects]]
   from = "/*"
   to = "/404.html"

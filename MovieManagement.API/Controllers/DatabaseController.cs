@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieManagement.API.Data;
 
 namespace MovieManagement.API.Controllers;
 
-[ApiController]
+[ApiController, Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
 public class DatabaseController : ControllerBase
 {
@@ -17,7 +18,7 @@ public class DatabaseController : ControllerBase
         var users = await _context.Users
             .Include(u => u.Country)
             .Select(u => new {
-                u.UserID, u.Username, u.Email, u.PasswordHash,
+                u.UserID, u.Username, u.Email,
                 Country = u.Country != null ? u.Country.CountryName : "",
                 u.RegistrationDate,
                 ReviewCount = u.Reviews.Count

@@ -12,3 +12,11 @@ appsettings.Production.json
 
 ## Node
 node_modules/
+
+# Secrets and local tooling
+*.pem
+*.key
+**/keys/
+.tools/
+artifacts/
+.netlify/

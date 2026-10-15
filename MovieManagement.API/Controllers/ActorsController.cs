@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieManagement.API.Data;
@@ -46,6 +47,7 @@ public class ActorsController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> CreateActor([FromBody] CreateActorDto dto)
     {
@@ -60,6 +62,7 @@ public class ActorsController : ControllerBase
         return CreatedAtAction(nameof(GetActor), new { id = actor.ActorID }, actor);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateActor(int id, [FromBody] CreateActorDto dto)
     {
@@ -72,6 +75,7 @@ public class ActorsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteActor(int id)
     {

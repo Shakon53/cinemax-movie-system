@@ -7,13 +7,16 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-0">
       <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
-      <div class="collapse navbar-collapse">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Открыть меню"><i class="bi bi-list" style="color:var(--text-primary);font-size:24px"></i></button>
+      <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
           <li class="nav-item"><a class="nav-link active" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
@@ -40,19 +43,16 @@
           <h4><i class="bi bi-pencil-square me-2 text-danger"></i><span data-i18n="review_write">Write a Review</span></h4>
           <form id="reviewForm">
             <div class="row g-3">
-              <div class="col-md-6">
-                <input type="text" id="rUsername" class="form-control form-control-dark" data-i18n="review_name" data-i18n-attr="placeholder" placeholder="Your name" required>
-              </div>
-              <div class="col-md-6">
-                <input type="email" id="rEmail" class="form-control form-control-dark" placeholder="email@example.com" required>
-              </div>
+              <input type="hidden" id="rUsername">
+              <input type="hidden" id="rEmail">
               <div class="col-12">
                 <select id="rMovieId" class="form-control form-control-dark" required>
                   <option value="">Select a movie...</option>
                 </select>
               </div>
               <div class="col-12">
-                <textarea id="rComment" class="form-control form-control-dark" rows="4" data-i18n="review_text" data-i18n-attr="placeholder" placeholder="Share your thoughts about this movie..." required></textarea>
+                <textarea maxlength="2000" id="rComment" class="form-control form-control-dark" rows="4" data-i18n="review_text" data-i18n-attr="placeholder" placeholder="Share your thoughts about this movie..." required></textarea>
+<label class="d-flex align-items-center gap-2 mt-2" style="font-size:13px;color:var(--text-secondary)"><input id="rSpoilers" type="checkbox">Отзыв содержит спойлеры — скрыть текст до раскрытия</label>
               </div>
               <div class="col-12">
                 <label style="color:#666;font-size:13px;margin-bottom:8px;display:block;">Your Rating (1-10)</label>
@@ -104,7 +104,10 @@
   <div id="toastContainer" class="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="vendor/supabase-2.117.3.js"></script>
+<script src="js/supabase-api.js"></script>
+<script src="js/api.js"></script>
   <script src="js/auth-helper.js"></script>
   <script>
     let userRating = 0, movies = [];
@@ -119,14 +122,14 @@
       const sel = document.getElementById('rMovieId');
       const filter = document.getElementById('movieFilter');
       movies.forEach(m => {
-        sel.innerHTML += `<option value="${m.movieID}">${m.title}</option>`;
-        filter.innerHTML += `<option value="${m.movieID}">${m.title}</option>`;
+        sel.innerHTML += `<option value="${m.movieID}">${escapeHtml(m.title)}</option>`;
+        filter.innerHTML += `<option value="${m.movieID}">${escapeHtml(m.title)}</option>`;
       });
       document.getElementById('topMovies').innerHTML = movies.slice(0,5).map((m,i) => `
         <div class="d-flex align-items-center gap-3 mb-3">
           <span style="color:#e50914;font-weight:800;font-size:18px;width:24px;">${i+1}</span>
           <div style="flex:1;">
-            <a href="movie.html?id=${m.movieID}" style="color:#fff;font-size:13px;font-weight:600;text-decoration:none;">${m.title}</a>
+            <a href="movie.html?id=${m.movieID}" style="color:#fff;font-size:13px;font-weight:600;text-decoration:none;">${escapeHtml(m.title)}</a>
             <div style="font-size:11px;color:#666;">${m.releaseYear}</div>
           </div>
           <span style="color:#f5c518;font-weight:700;font-size:13px;">⭐ ${m.rating.toFixed(1)}</span>
@@ -151,14 +154,14 @@
         document.getElementById('reviewsList').innerHTML = reviews.map(r => `
           <div class="review-card">
             <div class="review-header">
-              <div class="review-avatar">${(r.username||'A')[0].toUpperCase()}</div>
+              <div class="review-avatar">${escapeHtml((r.username||'A')[0].toUpperCase())}</div>
               <div>
-                <div class="review-username">${r.username}</div>
+                <div class="review-username">${escapeHtml(r.username)}</div>
                 <div class="review-date">${formatDate(r.reviewDate)}</div>
               </div>
               <div class="review-rating ms-auto"><i class="bi bi-star-fill me-1"></i>${r.userRating.toFixed(1)}</div>
             </div>
-            <p class="review-text">${r.commentText}</p>
+            ${renderReviewText(r)}
           </div>`).join('');
       } catch (e) {
         document.getElementById('reviewsList').innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load</h3></div>';
@@ -174,23 +177,28 @@
     document.getElementById('reviewForm').addEventListener('submit', async e => {
       e.preventDefault();
       if (!userRating) { showToast('Please select a rating', 'error'); return; }
+      const button = e.target.querySelector('button[type="submit"]');
+      if (button.disabled) return;
+      button.disabled = true;
       try {
         await api.post('/reviews', {
           movieID: parseInt(document.getElementById('rMovieId').value),
           username: document.getElementById('rUsername').value,
           email: document.getElementById('rEmail').value,
           commentText: document.getElementById('rComment').value,
+          containsSpoilers: document.getElementById('rSpoilers').checked,
           userRating
         });
         showToast('Review submitted successfully! 🎉');
         e.target.reset(); userRating = 0;
         document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('filled'));
         loadReviews(document.getElementById('movieFilter').value);
-      } catch (ex) { showToast('Failed to submit', 'error'); }
+      } catch (ex) { showToast(ex.message, 'error'); }
+      finally { button.disabled = false; }
     });
 
     document.getElementById('movieFilter').addEventListener('change', e => loadReviews(e.target.value));
-    init();
+    init().catch(error => { document.getElementById('reviewsList').textContent = 'Не удалось загрузить отзывы: ' + error.message; });
   </script>
 <script src="js/keepalive.js"></script></body>
 </html>

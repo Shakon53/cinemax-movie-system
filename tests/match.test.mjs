@@ -1,0 +1,47 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+const read = p => readFile(new URL('../' + p, import.meta.url),'utf8');
+test('guest Movie Match: private tokens, host control, unanimous matches, expiry',async()=>{
+ const db=new PGlite();
+ try {
+  await db.exec((await read('tests/security.test.mjs')).match(/await db\.exec\(`([\s\S]*?)`\);/)[1]);
+  await db.exec(await read('supabase/migrations/202610150001_cinemax.sql'));
+  await db.exec(await read('supabase/seed.sql'));
+  await db.exec(await read('supabase/migrations/202610150003_vibes_match.sql'));
+  await db.exec('alter table auth.users add column email_confirmed_at timestamptz; alter table auth.users add column confirmation_sent_at timestamptz');
+  await db.exec(await read('supabase/migrations/202610150004_initial_admin.sql'));
+  const owner='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  await db.exec("insert into cinemax_private.initial_admin(email) values ('owner@example.test')");
+  await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[owner,'owner@example.test',JSON.stringify({username:'owner'})]);
+  await db.query('update auth.users set email_confirmed_at=now() where id=$1',[owner]);
+  assert.equal((await db.query('select * from public.user_roles')).rows.length,0,'auto-confirmed signup does not grant admin');
+  await db.query('update auth.users set confirmation_sent_at=now(),email_confirmed_at=now() where id=$1',[owner]);
+  assert.equal((await db.query('select role from public.user_roles where user_id=$1',[owner])).rows[0].role,'admin');
+  await db.exec('set role anon');
+  const rpc=async(name,params=[])=> (await db.query('select public.'+name+'('+params.map((_,i)=>'$'+(i+1)).join(',')+') as data',params)).rows[0].data;
+  const host=await rpc('create_movie_match',['Host']);
+  const guest=await rpc('join_movie_match',[host.state.code,'Guest']);
+  assert.equal(guest.state.members.length,2);
+  assert.equal(JSON.stringify(host.state).includes(guest.token),false);
+  await assert.rejects(db.query('select * from cinemax_private.members'),/permission denied/);
+  await assert.rejects(rpc('start_movie_match',[guest.token]),/создатель/);
+  await assert.rejects(rpc('movie_match_state',['00000000-0000-4000-8000-000000000000']),/не найдена/);
+  const started=await rpc('start_movie_match',[host.token]);
+  assert.equal(started.started,true);
+  assert.equal(started.candidates.length,12);
+  await assert.rejects(rpc('join_movie_match',[host.state.code,'Late']),/уже начался/);
+  const id=started.candidates[0];
+  assert.equal((await rpc('vote_movie_match',[host.token,id,true])).matches.length,0);
+  const matched=await rpc('vote_movie_match',[guest.token,id,true]);
+  assert.deepEqual(matched.matches,[id]);
+  assert.deepEqual(matched.seen,[id]);
+  assert.equal((await rpc('vote_movie_match',[guest.token,id,false])).matches.length,0);
+  await assert.rejects(rpc('vote_movie_match',[host.token,99999,true]),/Некорректный/);
+  await db.exec('reset role');
+  await db.exec("update cinemax_private.rooms set expires_at=now()-interval '1 second'");
+  await db.exec('set role anon');
+  await assert.rejects(rpc('movie_match_state',[host.token]),/истёк/);
+ } finally {await db.close();}
+});

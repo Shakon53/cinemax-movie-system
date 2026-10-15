@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieManagement.API.Data;
@@ -29,16 +31,13 @@ public class ReviewsController : ControllerBase
         }));
     }
 
-    [HttpPost]
+    [HttpPost, Authorize]
     public async Task<IActionResult> CreateReview([FromBody] CreateReviewDto dto)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null)
-        {
-            user = new User { Username = dto.Username, Email = dto.Email, CountryID = 1, RegistrationDate = DateTime.Now };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-        }
+        var user = await _context.Users.FindAsync(int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+        if (user == null) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(dto.CommentText) || dto.CommentText.Length > 2000 || !double.IsFinite(dto.UserRating) || dto.UserRating < 1 || dto.UserRating > 10) return BadRequest(new { message = "Enter a review up to 2000 characters and a rating from 1 to 10." });
+        if (!await _context.Movies.AnyAsync(m => m.MovieID == dto.MovieID)) return NotFound();
 
         var review = new Review
         {
@@ -46,18 +45,19 @@ public class ReviewsController : ControllerBase
             MovieID = dto.MovieID,
             CommentText = dto.CommentText,
             UserRating = dto.UserRating,
-            ReviewDate = DateTime.Now
+            ReviewDate = DateTime.UtcNow
         };
         _context.Reviews.Add(review);
         await _context.SaveChangesAsync();
         return Ok(new { message = "Review added successfully" });
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}"), Authorize]
     public async Task<IActionResult> DeleteReview(int id)
     {
         var review = await _context.Reviews.FindAsync(id);
         if (review == null) return NotFound();
+        if (!User.IsInRole("Admin") && review.UserID.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         _context.Reviews.Remove(review);
         await _context.SaveChangesAsync();
         return NoContent();

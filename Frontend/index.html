@@ -7,8 +7,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet">
+  <link href="css/hero-mosaic.css" rel="stylesheet">
 </head>
 <body>
+<div style="padding:12px 24px;background:#13281c;text-align:center"><a href="free.html" style="color:#8be5ac;text-decoration:none">Бесплатное кино: Big Buck Bunny и Sintel — открытые фильмы Blender →</a></div>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-0">
@@ -18,6 +21,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
@@ -33,28 +37,31 @@
     </div>
   </nav>
 
-  <!-- FEATURED HERO -->
-  <section class="featured-hero" id="featuredHero">
-    <div class="featured-backdrop" id="featuredBackdrop"></div>
-    <div class="featured-overlay"></div>
-    <div class="featured-content">
-      <div class="featured-badge"><i class="bi bi-trophy-fill me-1"></i>TOP RATED</div>
-      <h1 class="featured-title" id="featuredTitle"><span data-i18n="hero_title">Discover <span>Amazing</span> Movies</span></h1>
-      <div class="featured-meta" id="featuredMeta"></div>
-      <p class="featured-desc" id="featuredDesc"></p>
-      <div class="featured-actions">
-        <a href="#" class="btn-featured-primary" id="featuredBtn"><i class="bi bi-play-fill me-2"></i>View Details</a>
-        <div class="featured-stats">
-          <div class="fstat"><span id="statMovies">—</span><small data-i18n="stat_movies">Movies</small></div>
-          <div class="fstat"><span id="statActors">—</span><small data-i18n="stat_actors">Actors</small></div>
-          <div class="fstat"><span id="statDirectors">—</span><small data-i18n="stat_directors">Directors</small></div>
-        </div>
+  <!-- CINEMAX: live catalog mosaic -->
+  <section class="cinema-hero" id="featuredHero" aria-labelledby="cinemaHeadline">
+    <div class="cinema-hero-copy">
+      <div class="cinema-eyebrow" data-i18n="cinema_eyebrow">ХОРОШЕЕ КИНО. ТВОЙ ВЕЧЕР.</div>
+      <h1 class="cinema-headline" id="cinemaHeadline" data-i18n="cinema_title"><span>Новая история.</span><span>Новые <em>эмоции.</em></span></h1>
+      <p class="cinema-intro" data-i18n="cinema_intro">Найди фильм под своё настроение. Открой что-то неожиданное или выбери, что посмотреть, вместе с друзьями.</p>
+      <div class="cinema-hero-actions">
+        <a href="#catalog" class="btn-featured-primary"><i class="bi bi-arrow-down-right me-2" aria-hidden="true"></i><span data-i18n="cinema_catalog">Выбрать фильм</span></a>
+        <a href="match.html" class="cinema-match-link"><i class="bi bi-people" aria-hidden="true"></i><span data-i18n="cinema_friends">Выбрать с друзьями</span></a>
+      </div>
+      <div class="cinema-hero-stats">
+        <div class="fstat"><span id="statMovies">—</span><small data-i18n="stat_movies">Movies</small></div>
+        <div class="fstat"><span id="statActors">—</span><small data-i18n="stat_actors">Actors</small></div>
+        <div class="fstat"><span id="statDirectors">—</span><small data-i18n="stat_directors">Directors</small></div>
       </div>
     </div>
+    <div class="cinema-wall" aria-label="CineMax collection">
+      <div class="cinema-columns" id="cinemaColumns"></div>
+      <p class="cinema-wall-status" id="cinemaWallStatus" role="status" data-i18n="cinema_loading">Загружаем коллекцию…</p>
+    </div>
+    <button type="button" class="cinema-motion" id="cinemaMotion" aria-pressed="false" hidden><i class="bi bi-pause-fill" aria-hidden="true"></i><span data-i18n="cinema_pause">Остановить</span></button>
   </section>
 
   <!-- SEARCH & FILTER -->
-  <section class="search-section">
+  <section class="search-section" id="catalog" style="scroll-margin-top:100px">
     <div class="d-flex gap-3 align-items-center">
       <div class="position-relative flex-grow-1">
         <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
@@ -82,6 +89,26 @@
     <div id="genreFilters" class="d-flex gap-2 mt-3 flex-wrap">
       <button class="filter-btn active" data-genre="">All</button>
     </div>
+    <details class="discovery-panel mt-3">
+      <summary><i class="bi bi-magic me-2"></i>Подобрать по настроению и времени</summary>
+      <div class="d-flex gap-3 flex-wrap align-items-end mt-3">
+        <label class="discovery-field">Настроение
+          <select id="moodSelect" class="filter-btn"><option value="">Любое</option><option value="cozy">Легко и уютно</option><option value="thoughtful">Хочу подумать</option><option value="adrenaline">Нужен драйв</option><option value="emotional">Сильные эмоции</option><option value="epic">Большое приключение</option></select>
+        </label>
+        <label class="discovery-field">Сколько есть времени
+          <select id="timeSelect" class="filter-btn"><option value="">Без ограничения</option><option value="30">До 30 минут</option><option value="90">До 90 минут</option><option value="120">До 2 часов</option><option value="180">До 3 часов</option></select>
+        </label>
+        <label class="discovery-field">Насыщенность
+          <select id="intensitySelect" class="filter-btn"><option value="">Любая</option><option value="2">Лёгкое кино</option><option value="3">Умеренная</option><option value="5">Можно напряжённое</option></select>
+        </label>
+        <label class="discovery-field">Доступ
+          <select id="accessSelect" class="filter-btn"><option value="">Весь каталог</option><option value="free">Бесплатные фильмы</option></select>
+        </label>
+        <button type="button" id="randomMovie" class="btn-outline-red px-3 py-2"><i class="bi bi-shuffle me-1"></i>Выбрать за меня</button>
+        <button type="button" id="resetDiscovery" class="filter-btn">Сбросить</button>
+      </div>
+      <p class="discovery-note mt-2 mb-0">Подбор по редакционным меткам каталога. Хотите выбрать вместе? <a href="match.html">Создать комнату →</a></p>
+    </details>
   </section>
 
   <!-- MOVIES -->
@@ -130,16 +157,27 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="vendor/supabase-2.117.3.js"></script>
+<script src="js/supabase-api.js"></script>
+<script src="js/api.js"></script>
   <script src="js/auth-helper.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/discovery.js"></script>
+<script src="js/hero-mosaic.js"></script>
   <script>
     let currentPage = 1, totalCount = 0, currentGenre = '', currentSort = 'rating', searchTimeout;
     const pageSize = 12;
+    let moviesRequest = 0, genresRequest = 0;
 
     async function loadGenres() {
+      const request = ++genresRequest;
       try {
         const genres = await api.get('/genres');
+        if (request !== genresRequest) return;
         const container = document.getElementById('genreFilters');
+        container.querySelectorAll('[data-genre]:not([data-genre=""])').forEach(button => button.remove());
+        container.querySelector('[data-genre=""]').textContent = t('genre_all');
         genres.forEach(g => {
           const btn = document.createElement('button');
           btn.className = 'filter-btn';
@@ -158,40 +196,41 @@
     }
 
     async function loadMovies() {
+      const request = ++moviesRequest;
+      document.getElementById('pagination').replaceChildren();
       const grid = document.getElementById('moviesGrid');
       grid.innerHTML = Array(8).fill(`<div class="skeleton-card"><div class="skeleton skeleton-poster"></div><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div></div>`).join('');
       try {
         const search = document.getElementById('searchInput').value;
         const sort = document.getElementById('sortSelect').value;
         const year = document.getElementById('yearSelect').value;
-        const params = new URLSearchParams({ page: currentPage, pageSize: year ? 100 : pageSize, sortBy: sort });
+        const params = new URLSearchParams({ page: currentPage, pageSize: pageSize, sortBy: sort });
         if (search) params.append('search', search);
         if (currentGenre) params.append('genreId', currentGenre);
+        if (year) params.append('year', year);
+        appendDiscoveryFilters(params);
         let { data: movies, total } = await api.getWithHeaders(`/movies?${params}`);
-        if (year) {
-          movies = movies.filter(m => m.releaseYear == year);
-          total = movies.length;
-          movies = movies.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-        }
+        if (request !== moviesRequest) return;
         totalCount = total;
         document.getElementById('movieCount').textContent = `${total} ${t('movies_found')}`;
         if (!movies.length) {
           grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-film"></i><h3>No movies found</h3><p>Try adjusting your search or filters</p></div>';
           return;
         }
-        const favs = getFavs();
+        const favs = await CineMaxFavorites.initialize().catch(() => []);
+        if (request !== moviesRequest) return;
         grid.innerHTML = movies.map(m => `
           <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'">
             ${m.discountPercent > 0 ? `<span class="discount-badge">-${m.discountPercent}%</span>` : ''}
-            <button class="btn-fav ${favs.includes(m.movieID)?'active':''}" onclick="event.stopPropagation();toggleFav(${m.movieID},'${m.title.replace(/'/g,"'")}',this)" title="Add to favorites">${favs.includes(m.movieID)?'❤️':'🤍'}</button>
-            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+            <button class="btn-fav ${favs.includes(m.movieID)?'active':''}" onclick="event.stopPropagation();toggleFav(${m.movieID},this)" title="Add to favorites">${favs.includes(m.movieID)?'❤️':'🤍'}</button>
+            ${m.posterUrl ? `<img class="movie-poster" src="${escapeHtml(safeUrl(m.posterUrl))}" alt="${escapeHtml(m.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
             <div class="movie-poster-placeholder" ${m.posterUrl ? 'style="display:none"' : ''}>🎬</div>
-            <div class="movie-card-overlay"><p class="overlay-desc">${m.description||''}</p></div>
+            <div class="movie-card-overlay"><p class="overlay-desc">${escapeHtml(m.description||'')}</p></div>
             <div class="movie-info">
-              <div class="movie-title" title="${m.title}">${m.title}</div>
+              <div class="movie-title" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</div>
               <div class="movie-meta">
                 <span class="movie-year">${m.releaseYear}</span>
-                <span class="movie-genre">${m.genreName}</span>
+                <span class="movie-genre">${escapeHtml(m.genreName)}</span>
               </div>
               <div class="d-flex align-items-center justify-content-between">
                 <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
@@ -201,8 +240,10 @@
             </div>
           </div>`).join('');
         renderPagination(Math.ceil(total / pageSize));
+        updateFavCount();
       } catch (e) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-exclamation-triangle"></i><h3>Failed to load movies</h3><p>API server is unavailable. Please try again in a moment.</p></div>';
+        if (request !== moviesRequest) return;
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-exclamation-triangle"></i><h3>Не удалось загрузить фильмы</h3><p>${escapeHtml(e.message)}</p></div>`;
       }
     }
 
@@ -228,13 +269,12 @@
     document.getElementById('yearSelect').addEventListener('change', () => { currentPage = 1; loadMovies(); });
 
     // FAVORITES
-    function getFavs() { return JSON.parse(localStorage.getItem('cinemax_favs') || '[]'); }
-    function toggleFav(id, title, btn) {
-      let favs = getFavs();
-      if (favs.includes(id)) { favs = favs.filter(f => f !== id); btn.textContent = '🤍'; btn.classList.remove('active'); showToast(`Removed from favorites`); }
-      else { favs.push(id); btn.textContent = '❤️'; btn.classList.add('active'); showToast(`❤️ ${title} added to favorites!`); }
-      localStorage.setItem('cinemax_favs', JSON.stringify(favs));
-      updateFavCount();
+    function getFavs() { return CineMaxFavorites.list(); }
+    async function toggleFav(id, btn) {
+      btn.disabled = true;
+      try { const added = await CineMaxFavorites.toggle(id); btn.textContent = added ? '❤️' : '🤍'; btn.classList.toggle('active', added); updateFavCount(); showToast(added ? 'Добавлено в избранное' : 'Удалено из избранного'); }
+      catch (error) { showToast(error.message, 'error'); }
+      finally { btn.disabled = false; }
     }
     function updateFavCount() { const c = getFavs().length; document.getElementById('favCount').textContent = c; document.getElementById('favCount').style.display = c > 0 ? '' : 'none'; }
 
@@ -252,30 +292,10 @@
     }
 
     async function loadFeatured() {
-      try {
-        const [topMovies, actors, directors] = await Promise.all([
-          api.getWithHeaders('/movies?pageSize=1&sortBy=rating'),
-          api.get('/actors'),
-          api.get('/directors')
-        ]);
-        const m = topMovies.data[0];
-        document.getElementById('statMovies').textContent = topMovies.total;
-        document.getElementById('statActors').textContent = actors.length;
-        document.getElementById('statDirectors').textContent = directors.length;
-        if (m) {
-          if (m.posterUrl) {
-            document.getElementById('featuredBackdrop').style.backgroundImage = `url('${m.posterUrl}')`;
-          }
-          document.getElementById('featuredTitle').textContent = m.title;
-          document.getElementById('featuredDesc').textContent = m.description?.substring(0,160) + '...';
-          document.getElementById('featuredBtn').href = `movie.html?id=${m.movieID}`;
-          document.getElementById('featuredMeta').innerHTML = `
-            <span class="featured-tag"><i class="bi bi-star-fill me-1" style="color:#f5c518"></i>${m.rating.toFixed(1)}</span>
-            <span class="featured-tag">${m.releaseYear}</span>
-            <span class="featured-tag">${m.genreName}</span>
-            <span class="featured-tag">${m.durationMinutes} min</span>`;
-        }
-      } catch(e) {}
+      loadCinemaHero();
+      const counts = await Promise.allSettled([api.get('/actors'), api.get('/directors')]);
+      if (counts[0].status === 'fulfilled') document.getElementById('statActors').textContent = counts[0].value.length;
+      if (counts[1].status === 'fulfilled') document.getElementById('statDirectors').textContent = counts[1].value.length;
     }
 
     loadFeatured();

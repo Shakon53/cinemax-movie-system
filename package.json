@@ -1,0 +1,6 @@
+{
+  "name": "cinemax-supabase",
+  "private": true,
+  "scripts": { "test": "node --wasm-num-compilation-tasks=1 --test --test-concurrency=1 tests/*.test.mjs" },
+  "devDependencies": { "@electric-sql/pglite": "^0.3.0" }
+}

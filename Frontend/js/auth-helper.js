@@ -1,8 +1,11 @@
 function getUser() {
-  return JSON.parse(localStorage.getItem('cinemax_user') || 'null');
+  try { return JSON.parse(localStorage.getItem('cinemax_user') || 'null'); }
+  catch { localStorage.removeItem('cinemax_user'); return null; }
 }
 
-function logout() {
+async function logout() {
+  await api.post('/auth/logout', {}).catch(() => {});
+  localStorage.removeItem('cinemax_admin');
   localStorage.removeItem('cinemax_user');
   window.location.href = 'index.html';
 }
@@ -15,17 +18,17 @@ function renderUserNav() {
     const initial = (user.username || 'U')[0].toUpperCase();
     container.innerHTML = `
       <div class="user-nav-wrap" style="position:relative;">
-        <button class="user-avatar-btn" onclick="document.getElementById('userDropdown').classList.toggle('show')" title="${user.username}">
-          <span class="user-avatar">${initial}</span>
-          <span class="user-name">${user.username}</span>
+        <button class="user-avatar-btn" onclick="document.getElementById('userDropdown').classList.toggle('show')" title="${escapeHtml(user.username)}">
+          <span class="user-avatar">${escapeHtml(initial)}</span>
+          <span class="user-name">${escapeHtml(user.username)}</span>
           <i class="bi bi-chevron-down" style="font-size:10px;"></i>
         </button>
         <div class="user-dropdown" id="userDropdown">
           <div class="user-dropdown-header">
-            <div class="user-avatar large">${initial}</div>
+            <div class="user-avatar large">${escapeHtml(initial)}</div>
             <div>
-              <div style="font-weight:700;font-size:14px;">${user.username}</div>
-              <div style="font-size:11px;color:#666;">${user.email}</div>
+              <div style="font-weight:700;font-size:14px;">${escapeHtml(user.username)}</div>
+              <div style="font-size:11px;color:#666;">${escapeHtml(user.email)}</div>
             </div>
           </div>
           <div class="user-dropdown-divider"></div>
@@ -47,4 +50,8 @@ function renderUserNav() {
   if (typeof applyLang === 'function') applyLang();
 }
 
-document.addEventListener('DOMContentLoaded', renderUserNav);
+document.addEventListener('DOMContentLoaded', async () => {
+  try { localStorage.setItem('cinemax_user', JSON.stringify(await api.get('/auth/me'))); }
+  catch { localStorage.removeItem('cinemax_user'); localStorage.removeItem('cinemax_admin'); }
+  renderUserNav();
+});

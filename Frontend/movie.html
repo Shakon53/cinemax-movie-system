@@ -11,13 +11,16 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-0">
       <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
-      <div class="collapse navbar-collapse">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Открыть меню"><i class="bi bi-list" style="color:var(--text-primary);font-size:24px"></i></button>
+      <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
@@ -55,11 +58,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="vendor/supabase-2.117.3.js"></script>
+<script src="js/supabase-api.js"></script>
+<script src="js/api.js"></script>
   <script src="js/auth-helper.js"></script>
   <script>
     const id = new URLSearchParams(location.search).get('id');
-    let userRating = 0;
+    let userRating = 0, trailerId = '';
 
     async function load() {
       if (!id) { location.href = 'index.html'; return; }
@@ -73,45 +79,46 @@
     }
 
     function render(m) {
+      trailerId = youtubeVideoId(m.trailerUrl);
       document.getElementById('movieDetail').innerHTML = `
         <!-- HERO -->
         <div class="movie-detail-hero">
-          <div class="movie-backdrop" style="background-image:url('${m.posterUrl}')"></div>
+          <div class="movie-backdrop"></div>
           <div class="movie-detail-content">
             ${m.posterUrl
-              ? `<img class="movie-detail-poster" src="${m.posterUrl}" alt="${m.title}" onerror="this.src=''">`
+              ? `<img class="movie-detail-poster" src="${escapeHtml(safeUrl(m.posterUrl))}" alt="${escapeHtml(m.title)}" onerror="this.onerror=null;this.style.visibility='hidden'">`
               : `<div class="movie-detail-poster d-flex align-items-center justify-content-center" style="background:#1a1a2e;border-radius:12px;aspect-ratio:2/3;font-size:80px;">🎬</div>`}
             <div class="movie-detail-info flex-grow-1">
               <div class="movie-meta mb-2">
-                <span class="movie-genre">${m.genreName}</span>
-                ${m.ageRestriction ? `<span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;font-size:12px;">${m.ageRestriction}</span>` : ''}
+                <span class="movie-genre">${escapeHtml(m.genreName)}</span>
+                ${m.ageRestriction ? `<span style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;font-size:12px;">${escapeHtml(m.ageRestriction)}</span>` : ''}
                 ${m.is3D ? `<span style="background:rgba(99,102,241,0.2);color:#818cf8;padding:2px 8px;border-radius:4px;font-size:12px;">3D</span>` : ''}
               </div>
-              <h1 class="movie-detail-info" style="font-size:36px;font-weight:900;">${m.title}</h1>
+              <h1 class="movie-detail-info" style="font-size:36px;font-weight:900;">${escapeHtml(m.title)}</h1>
               <div class="movie-detail-meta">
-                <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating.toFixed(1)} IMDb</span>
+                <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating.toFixed(1)} · рейтинг каталога</span>
                 <span class="meta-badge"><i class="bi bi-calendar me-1"></i>${m.releaseYear}</span>
                 <span class="meta-badge"><i class="bi bi-clock me-1"></i>${m.durationMinutes} min</span>
-                <span class="meta-badge"><i class="bi bi-translate me-1"></i>${m.languageName}</span>
+                <span class="meta-badge"><i class="bi bi-translate me-1"></i>${escapeHtml(m.languageName)}</span>
                 ${m.discountPercent > 0 ? `<span class="meta-badge discount"><i class="bi bi-tag me-1"></i>-${m.discountPercent}% OFF</span>` : ''}
               </div>
-              <p class="movie-description">${m.description}</p>
+              <p class="movie-description">${escapeHtml(m.description)}</p>
               <div class="d-flex gap-2 mb-4" style="flex-wrap:wrap;">
                 <a href="movie.html?id=${m.movieID}" class="btn-red" style="padding:10px 24px;"><i class="bi bi-info-circle me-2"></i>Details</a>
-                ${m.trailerUrl ? `<button onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;"><i class="bi bi-play-circle me-2"></i>Watch Trailer</button>` : ''}
+                ${trailerId ? `<button onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;"><i class="bi bi-play-circle me-2"></i>Watch Trailer</button>` : ''}
               </div>
               <div class="stats-row">
                 <div class="stat-box" onclick="event.stopPropagation();window.location='director.html?id=${m.directorID}'" style="cursor:pointer;" title="View director">
-                  <div class="stat-value" style="color:#e50914;">${m.directorName} <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i></div>
+                  <div class="stat-value" style="color:#e50914;">${escapeHtml(m.directorName)} <i class="bi bi-box-arrow-up-right" style="font-size:11px;"></i></div>
                   <div class="stat-label">Director</div>
                 </div>
-                ${m.mainActorName ? `<div class="stat-box"><div class="stat-value">${m.mainActorName}</div><div class="stat-label">Main Actor</div></div>` : ''}
+                ${m.mainActorName ? `<div class="stat-box"><div class="stat-value">${escapeHtml(m.mainActorName)}</div><div class="stat-label">Main Actor</div></div>` : ''}
                 <div class="stat-box">
-                  <div class="stat-value">${m.countryName}</div>
+                  <div class="stat-value">${escapeHtml(m.countryName)}</div>
                   <div class="stat-label">Country</div>
                 </div>
                 <div class="stat-box">
-                  <div class="stat-value">${m.productionCompany}</div>
+                  <div class="stat-value">${escapeHtml(m.productionCompany)}</div>
                   <div class="stat-label">Studio</div>
                 </div>
               </div>
@@ -119,6 +126,7 @@
           </div>
         </div>
 
+        ${m.isFree && m.watchUrl ? `<section class="movies-section"><h2>Бесплатный просмотр</h2><p>${escapeHtml(m.attribution)}</p><a class="btn-red" href="${escapeHtml(safeUrl(m.watchUrl))}" target="_blank" rel="noopener noreferrer">Открыть фильм у правообладателя ↗</a> <a href="${escapeHtml(safeUrl(m.licenseUrl))}" target="_blank" rel="noopener noreferrer">Лицензия</a></section>` : ""}
         <!-- TRAILER -->
         <div class="movies-section" id="trailerSection" style="display:none;">
           <h2 class="section-title mb-4"><i class="bi bi-play-circle me-2" style="color:#e50914"></i>Official Trailer</h2>
@@ -128,7 +136,7 @@
           </div>
           <div id="trailerEmbed" style="display:none;">
             <div class="trailer-container">
-              <iframe id="trailerFrame" src="" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+              <iframe title="Трейлер фильма" id="trailerFrame" src="" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
             </div>
           </div>
         </div>
@@ -150,7 +158,7 @@
             </div>
             <div class="col-md-3 col-6">
               <div class="stat-box text-center">
-                <div class="stat-value" style="color:#f5c518">${m.iMDbRating ? m.iMDbRating.toFixed(1) : m.rating.toFixed(1)}</div>
+                <div class="stat-value" style="color:#f5c518">${m.imDbRating != null ? m.imDbRating.toFixed(1) : 'N/A'}</div>
                 <div class="stat-label">IMDb Rating</div>
               </div>
             </div>
@@ -169,8 +177,8 @@
                 <h5 class="mb-4" style="font-weight:700;">Ratings Overview</h5>
                 <div class="d-flex align-items-center gap-3 mb-3">
                   <span style="width:120px;font-size:13px;color:#b3b3b3;">IMDb</span>
-                  <div class="rating-bar"><div class="rating-fill gold" style="width:${(m.iMDbRating||m.rating)*10}%"></div></div>
-                  <span style="width:40px;font-size:13px;color:#f5c518;font-weight:700;">${m.iMDbRating ? m.iMDbRating.toFixed(1) : m.rating.toFixed(1)}</span>
+                  <div class="rating-bar"><div class="rating-fill gold" style="width:${(m.imDbRating||0)*10}%"></div></div>
+                  <span style="width:40px;font-size:13px;color:#f5c518;font-weight:700;">${m.imDbRating != null ? m.imDbRating.toFixed(1) : 'N/A'}</span>
                 </div>
                 <div class="d-flex align-items-center gap-3 mb-3">
                   <span style="width:120px;font-size:13px;color:#b3b3b3;">Rotten Tomatoes</span>
@@ -185,8 +193,8 @@
                 <table class="w-100" style="font-size:14px;">
                   <tr><td style="color:#666;padding:6px 0;width:140px;">Subtitles</td><td style="color:#b3b3b3;">${m.subtitleAvailable ? '✅ Available' : '❌ Not available'}</td></tr>
                   <tr><td style="color:#666;padding:6px 0;">Format</td><td style="color:#b3b3b3;">${m.is3D ? '3D + 2D' : '2D'}</td></tr>
-                  <tr><td style="color:#666;padding:6px 0;">Language</td><td style="color:#b3b3b3;">${m.languageName}</td></tr>
-                  <tr><td style="color:#666;padding:6px 0;">Age Rating</td><td style="color:#b3b3b3;">${m.ageRestriction}</td></tr>
+                  <tr><td style="color:#666;padding:6px 0;">Language</td><td style="color:#b3b3b3;">${escapeHtml(m.languageName)}</td></tr>
+                  <tr><td style="color:#666;padding:6px 0;">Age Rating</td><td style="color:#b3b3b3;">${escapeHtml(m.ageRestriction)}</td></tr>
                 </table>
               </div>
             </div>
@@ -198,11 +206,11 @@
           <div class="actors-grid mb-5">
             ${m.actors.map(a => `
               <div class="actor-card">
-                ${a.photoUrl ? `<img class="actor-photo" src="${a.photoUrl}" alt="${a.fullName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                ${a.photoUrl ? `<img class="actor-photo" src="${escapeHtml(safeUrl(a.photoUrl))}" alt="${escapeHtml(a.fullName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
                 <div class="actor-photo-placeholder" ${a.photoUrl ? 'style="display:none"' : ''}>🎭</div>
-                <div class="actor-name">${a.fullName}</div>
+                <div class="actor-name">${escapeHtml(a.fullName)}</div>
                 <div class="actor-role">${a.roleName || 'Actor'}</div>
-                <div class="actor-meta">${a.age} yrs • ${a.countryName}</div>
+                <div class="actor-meta">${a.age} yrs • ${escapeHtml(a.countryName)}</div>
                 ${a.oscarAwards > 0 ? `<div class="actor-meta" style="padding-bottom:12px;color:#f5c518;">🏆 ${a.oscarAwards} Oscar${a.oscarAwards>1?'s':''}</div>` : ''}
               </div>`).join('')}
           </div>` : ''}
@@ -215,14 +223,11 @@
             <h4><i class="bi bi-pencil-square me-2" style="color:#e50914;"></i>Write a Review</h4>
             <form id="reviewForm">
               <div class="row g-3">
-                <div class="col-md-6">
-                  <input type="text" id="rUsername" class="form-control form-control-dark" placeholder="Your name" required>
-                </div>
-                <div class="col-md-6">
-                  <input type="email" id="rEmail" class="form-control form-control-dark" placeholder="Your email" required>
-                </div>
+                <input type="hidden" id="rUsername">
+                <input type="hidden" id="rEmail">
                 <div class="col-12">
-                  <textarea id="rComment" class="form-control form-control-dark" rows="3" placeholder="Share your thoughts about this movie..." required></textarea>
+                  <textarea maxlength="2000" id="rComment" class="form-control form-control-dark" rows="3" placeholder="Share your thoughts about this movie..." required></textarea>
+<label class="d-flex align-items-center gap-2 mt-2" style="font-size:13px;color:var(--text-secondary)"><input id="rSpoilers" type="checkbox">Отзыв содержит спойлеры — скрыть текст до раскрытия</label>
                 </div>
                 <div class="col-12">
                   <label style="color:#666;font-size:13px;margin-bottom:8px;display:block;">Your Rating</label>
@@ -260,21 +265,24 @@
 
       document.title = `${m.title} (${m.releaseYear}) — CineMax`;
       document.getElementById('pageDesc').content = m.description;
-      document.getElementById('ogTitle').content = `${m.title} — CineMax`;
+      document.getElementById('ogTitle').content = `${escapeHtml(m.title)} — CineMax`;
       document.getElementById('ogImage').content = m.posterUrl;
+      document.querySelector('.movie-backdrop').style.backgroundImage = 'url(' + JSON.stringify(safeUrl(m.posterUrl)) + ')';
 
       document.getElementById('reviewForm').addEventListener('submit', submitReview);
 
-      if (m.trailerUrl) {
+      loadSimilar(m.genreID, m.movieID);
+      if (trailerId) {
         document.getElementById('trailerSection').style.display = '';
-        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${m.trailerUrl}?rel=0&autoplay=1`;
-        const thumb = `https://img.youtube.com/vi/${m.trailerUrl}/maxresdefault.jpg`;
-        document.getElementById('trailerPoster').src = thumb;
-        document.getElementById('trailerPoster').onerror = function() { this.src = `https://img.youtube.com/vi/${m.trailerUrl}/hqdefault.jpg`; };
+        const poster = document.getElementById('trailerPoster');
+        poster.src = 'https://img.youtube.com/vi/' + trailerId + '/hqdefault.jpg';
+        poster.onerror = function() { this.onerror = null; this.style.display = 'none'; };
       }
     }
 
     function playTrailer() {
+      if (!trailerId) return;
+      document.getElementById('trailerFrame').src = 'https://www.youtube-nocookie.com/embed/' + trailerId + '?rel=0&autoplay=1';
       document.getElementById('trailerThumb').style.display = 'none';
       document.getElementById('trailerEmbed').style.display = '';
     }
@@ -289,9 +297,9 @@
         if (!filtered.length || !grid) return;
         grid.innerHTML = filtered.map(m => `
           <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'" style="cursor:pointer;">
-            ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
+            ${m.posterUrl ? `<img class="movie-poster" src="${escapeHtml(safeUrl(m.posterUrl))}" alt="${escapeHtml(m.title)}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
             <div class="movie-info">
-              <div class="movie-title" style="font-size:13px;">${m.title}</div>
+              <div class="movie-title" style="font-size:13px;">${escapeHtml(m.title)}</div>
               <span class="movie-rating" style="font-size:12px;"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
             </div>
           </div>`).join('');
@@ -301,14 +309,14 @@
     function renderReview(r) {
       return `<div class="review-card">
         <div class="review-header">
-          <div class="review-avatar">${(r.username||'A')[0].toUpperCase()}</div>
+          <div class="review-avatar">${escapeHtml((r.username||'A')[0].toUpperCase())}</div>
           <div>
-            <div class="review-username">${r.username}</div>
+            <div class="review-username">${escapeHtml(r.username)}</div>
             <div class="review-date">${formatDate(r.reviewDate)}</div>
           </div>
           <div class="review-rating ms-auto"><i class="bi bi-star-fill me-1"></i>${r.userRating.toFixed(1)}</div>
         </div>
-        <p class="review-text">${r.commentText}</p>
+        ${renderReviewText(r)}
       </div>`;
     }
 
@@ -321,17 +329,23 @@
     async function submitReview(e) {
       e.preventDefault();
       if (!userRating) { showToast('Please select a rating', 'error'); return; }
+      const button = e.target.querySelector('button[type="submit"]');
+      if (button.disabled) return;
+      button.disabled = true;
       try {
         await api.post('/reviews', {
           movieID: parseInt(id),
           username: document.getElementById('rUsername').value,
           email: document.getElementById('rEmail').value,
           commentText: document.getElementById('rComment').value,
+          containsSpoilers: document.getElementById('rSpoilers').checked,
           userRating
         });
+        userRating = 0;
         showToast('Review submitted! 🎉');
         setTimeout(() => load(), 500);
-      } catch (e) { showToast('Failed to submit review', 'error'); }
+      } catch (e) { showToast(e.message, 'error'); }
+      finally { button.disabled = false; }
     }
 
     load();

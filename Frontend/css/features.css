@@ -1,0 +1,30 @@
+/* Additions use the existing CineMax palette and leave the original layout intact. */
+.discovery-panel {border-top:1px solid var(--border);padding-top:12px;}
+.discovery-panel summary {font-size:14px;cursor:pointer;color:var(--text-primary);}
+.discovery-field {display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-secondary);}
+.discovery-field select {min-width:145px;text-align:left;}
+.discovery-note {font-size:12px;color:var(--text-secondary);}
+.discovery-note a,.match-page a {color:var(--accent);}
+.spoiler-review {border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px;}
+.spoiler-review summary {cursor:pointer;color:var(--text-secondary);font-size:13px;}
+.spoiler-review[open] summary {margin-bottom:12px;}
+.spoiler-review p {white-space:pre-wrap;overflow-wrap:anywhere;}
+.match-page {max-width:1060px;margin:0 auto;padding:36px 24px;}
+.match-page [hidden] {display:none!important;}
+.match-panel {background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.match-setup {display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px;}
+.match-page .form-control {margin:8px 0 16px;}
+.match-code {font-family:monospace;font-size:clamp(24px,5vw,36px);letter-spacing:5px;color:var(--accent);font-weight:800;}
+.match-members {display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+.match-member {border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-size:13px;}
+.match-layout {display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;}
+.match-card {display:flex;gap:24px;align-items:flex-start;}
+.match-card img {width:180px;max-width:35%;border-radius:8px;aspect-ratio:2/3;object-fit:cover;}
+.match-card h2 {font-size:clamp(22px,4vw,30px);}
+.match-actions {display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;}
+.match-actions button {flex:1;min-width:130px;padding:12px;}
+.match-result {border-left:3px solid var(--green);padding:12px 16px;background:var(--bg-card);border-radius:6px;margin-top:12px;}
+.match-status {color:var(--text-secondary);font-size:13px;}
+.match-error {color:#ff6b6b;min-height:24px;}
+.vibe-tags {font-size:11px;color:var(--text-secondary);margin-top:6px;}
+@media(max-width:768px){.match-setup,.match-layout{grid-template-columns:1fr;}.match-page{padding:24px 16px;}.match-panel{padding:18px;}.match-card{gap:14px;}.discovery-field{flex:1;min-width:140px;}.discovery-field select{width:100%;min-width:0;}}

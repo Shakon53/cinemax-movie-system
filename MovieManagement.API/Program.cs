@@ -1,3 +1,9 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
+using MovieManagement.API.Models;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MovieManagement.API.Data;
 using System.Linq;
@@ -38,10 +44,29 @@ else
 
 builder.Services.AddDbContext<MovieDbContext>(options => options.UseNpgsql(connStr));
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o => {
+    o.Cookie.Name = "cinemax_session";
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SameSite = SameSiteMode.Strict;
+    o.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    o.ExpireTimeSpan = TimeSpan.FromDays(7);
+    o.Events.OnValidatePrincipal = async c => {
+        var id = c.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(id, out var userId)) { c.RejectPrincipal(); return; }
+        var db = c.HttpContext.RequestServices.GetRequiredService<MovieDbContext>();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserID == userId);
+        var adminEmail = c.HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Admin:Email"];
+        var isAdmin = user != null && string.Equals(user.Email, adminEmail, StringComparison.OrdinalIgnoreCase);
+        if (user == null || isAdmin != (c.Principal?.IsInRole("Admin") == true)) c.RejectPrincipal();
+    };
+    o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
+    o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
+});
+builder.Services.AddAuthorization();
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(builder.Configuration["DataProtection:Path"] ?? Path.Combine(builder.Environment.ContentRootPath, "keys")));
+builder.Services.AddRateLimiter(o => {
+    o.RejectionStatusCode = 429;
+    o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 
 var app = builder.Build();
@@ -56,35 +81,42 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
         logger.LogInformation("Seeding data...");
         await DataSeeder.SeedAsync(context);
+        var adminEmail = builder.Configuration["Admin:Email"]?.Trim().ToLowerInvariant();
+        var adminPassword = builder.Configuration["Admin:Password"];
+        if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword)) {
+            if (adminPassword.Length < 16) throw new InvalidOperationException("Admin password must contain at least 16 characters.");
+            if (!await context.Users.AnyAsync(u => u.Email.ToLower() == adminEmail)) {
+                var country = await context.Countries.OrderBy(c => c.CountryID).FirstAsync();
+                var admin = new User { Username = "administrator", Email = adminEmail, CountryID = country.CountryID, RegistrationDate = DateTime.UtcNow };
+                admin.PasswordHash = new PasswordHasher<User>().HashPassword(admin, adminPassword);
+                context.Users.Add(admin); await context.SaveChangesAsync();
+            }
+        }
         logger.LogInformation("Database ready.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Database initialization failed: {Message}", ex.Message);
+        logger.LogError(ex, "Database initialization failed.");
+        throw;
     }
 }
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Movie Management API v1");
-    c.RoutePrefix = "swagger";
+if (app.Environment.IsDevelopment()) {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+app.Use(async (context, next) => {
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    if (context.Request.Method is not ("GET" or "HEAD" or "OPTIONS") && context.Request.Headers["Sec-Fetch-Site"] == "cross-site") { context.Response.StatusCode = 403; return; }
+    await next();
 });
-
-app.UseCors("AllowAll");
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapMethods("/health", ["GET", "HEAD"], () => Results.Ok(new { status = "healthy", time = DateTime.UtcNow }));
-app.MapGet("/api/reseed", async (MovieDbContext db) => {
-    try {
-        await DataSeeder.SeedAsync(db);
-        var movies = db.Movies.Count();
-        var actors = db.Actors.Count();
-        var directors = db.Directors.Count();
-        return Results.Ok(new { success = true, movies, actors, directors });
-    } catch (Exception ex) {
-        return Results.Ok(new { success = false, error = ex.Message, inner = ex.InnerException?.Message });
-    }
-});
 
 app.Run();

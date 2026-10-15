@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet">
 </head>
 <body>
   <script>if (!localStorage.getItem('cinemax_admin')) window.location.href = 'login.html';</script>
@@ -169,7 +170,17 @@
                   <input type="checkbox" id="m3D" class="form-check-input" style="width:18px;height:18px;"> 3D
                 </label>
               </div>
-              <div class="col-12 d-flex gap-3 pt-2">
+              <div class="col-md-6"><label>Трейлер (YouTube ID)</label><input id="mTrailer" class="form-control form-control-dark"></div>
+<div class="col-md-6"><label>Ссылка на бесплатный просмотр</label><input id="mWatch" type="url" class="form-control form-control-dark" placeholder="https://..."></div>
+<div class="col-md-6"><label>Ссылка на лицензию</label><input id="mLicense" type="url" class="form-control form-control-dark" placeholder="https://..."></div>
+<div class="col-md-6"><label>Автор / атрибуция</label><input id="mAttribution" class="form-control form-control-dark"></div>
+<div class="col-12"><label><input id="mFree" type="checkbox"> Бесплатный фильм с разрешением на распространение</label></div>
+<div class="col-12"><label class="mb-2">Настроение фильма</label><div class="d-flex flex-wrap gap-3">
+<label><input type="checkbox" id="mMood_cozy"> Легко и уютно</label><label><input type="checkbox" id="mMood_thoughtful"> На подумать</label><label><input type="checkbox" id="mMood_adrenaline"> Драйв</label><label><input type="checkbox" id="mMood_emotional"> Эмоции</label><label><input type="checkbox" id="mMood_epic"> Приключение</label>
+</div></div><div class="col-md-6"><label>Насыщенность</label><select id="mIntensity" class="form-control form-control-dark"><option value="1">1 — лёгкое</option><option value="2">2</option><option value="3" selected>3 — среднее</option><option value="4">4</option><option value="5">5 — напряжённое</option></select></div>
+<div class="col-md-6"><label>Метки через запятую</label><input id="mVibeTags" class="form-control form-control-dark" placeholder="Короткий метр, Большой экран"></div>
+<div class="col-12"><label><input type="checkbox" id="mPublished" checked> Показывать в каталоге</label></div>
+<div class="col-12 d-flex gap-3 pt-2">
                 <button type="submit" class="btn-red px-5 py-2"><i class="bi bi-check-lg me-2"></i>Save Movie</button>
                 <button type="button" class="btn-outline-red px-4 py-2" onclick="showSection('movies')">Cancel</button>
               </div>
@@ -216,7 +227,10 @@
 
   <div id="toastContainer" class="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="vendor/supabase-2.117.3.js"></script>
+<script src="js/supabase-api.js"></script>
+<script src="js/api.js"></script><script>api.get('/auth/me').then(u=>{if(u.role!=='Admin')location.href='login.html';}).catch(()=>location.href='login.html');</script>
   <script>
     let genres = [], directors = [], countries = [], confirmAction = null;
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
@@ -261,9 +275,9 @@
           <table class="w-100"><thead><tr><th>Title</th><th>Year</th><th>Genre</th><th>Rating</th><th>Actions</th></tr></thead>
           <tbody>${mv.data.map(m => `
             <tr>
-              <td><strong>${m.title}</strong></td>
+              <td><strong>${escapeHtml(m.title)}</strong></td>
               <td>${m.releaseYear}</td>
-              <td><span class="movie-genre">${m.genreName}</span></td>
+              <td><span class="movie-genre">${escapeHtml(m.genreName)}</span></td>
               <td><span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span></td>
               <td><a href="movie.html?id=${m.movieID}" class="btn-icon me-1" title="View"><i class="bi bi-eye"></i></a></td>
             </tr>`).join('')}</tbody></table>`;
@@ -280,9 +294,9 @@
           <tbody>${movies.map(m => `
             <tr>
               <td><img src="${m.posterUrl||''}" style="width:36px;height:52px;object-fit:cover;border-radius:4px;background:#222;" onerror="this.style.display='none'"></td>
-              <td><strong style="color:#fff;">${m.title}</strong><br><span style="font-size:11px;color:#555;">${m.directorName}</span></td>
+              <td><strong style="color:#fff;">${escapeHtml(m.title)}</strong><br><span style="font-size:11px;color:#555;">${escapeHtml(m.directorName)}</span></td>
               <td>${m.releaseYear}</td>
-              <td><span class="movie-genre">${m.genreName}</span></td>
+              <td><span class="movie-genre">${escapeHtml(m.genreName)}</span></td>
               <td><span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span></td>
               <td>${m.discountPercent > 0 ? `<span style="color:#46d369;font-weight:700;">-${m.discountPercent}%</span>` : '<span style="color:#444;">—</span>'}</td>
               <td>
@@ -303,11 +317,11 @@
           <table class="w-100"><thead><tr><th>Photo</th><th>Name</th><th>Age</th><th>Gender</th><th>Country</th><th>Oscars</th><th>Actions</th></tr></thead>
           <tbody>${actors.map(a => `
             <tr>
-              <td>${a.photoUrl ? `<img src="${a.photoUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;background:#222;" onerror="this.style.display='none'">` : '<div style="width:36px;height:36px;background:#222;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">🎭</div>'}</td>
-              <td><strong style="color:#fff;">${a.fullName}</strong></td>
+              <td>${a.photoUrl ? `<img src="${escapeHtml(safeUrl(a.photoUrl))}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;background:#222;" onerror="this.style.display='none'">` : '<div style="width:36px;height:36px;background:#222;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">🎭</div>'}</td>
+              <td><strong style="color:#fff;">${escapeHtml(a.fullName)}</strong></td>
               <td>${a.age}</td>
-              <td>${a.gender}</td>
-              <td>${a.countryName}</td>
+              <td>${escapeHtml(a.gender)}</td>
+              <td>${escapeHtml(a.countryName)}</td>
               <td>${a.oscarAwards > 0 ? `<span style="color:#f5c518;">🏆 ${a.oscarAwards}</span>` : '—'}</td>
               <td>
                 <button class="btn-icon danger" onclick="deleteActor(${a.actorID},'${a.fullName.replace(/'/g,"\\'")}')"><i class="bi bi-trash"></i></button>
@@ -323,8 +337,8 @@
           <table class="w-100"><thead><tr><th>User</th><th>Comment</th><th>Rating</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody>${reviews.map(r => `
             <tr>
-              <td><strong style="color:#fff;">${r.username}</strong></td>
-              <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.commentText}</td>
+              <td><strong style="color:#fff;">${escapeHtml(r.username)}</strong></td>
+              <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(r.commentText)}</td>
               <td><span class="movie-rating"><i class="bi bi-star-fill"></i> ${r.userRating.toFixed(1)}</span></td>
               <td style="white-space:nowrap;">${formatDate(r.reviewDate)}</td>
               <td><button class="btn-icon danger" onclick="deleteReview(${r.reviewID})"><i class="bi bi-trash"></i></button></td>
@@ -348,6 +362,16 @@
         document.getElementById('mLang').value = m.languageName;
         document.getElementById('mStudio').value = m.productionCompany;
         document.getElementById('mPoster').value = m.posterUrl;
+        for (const [id,key] of [['mTrailer','trailerUrl'],['mWatch','watchUrl'],['mLicense','licenseUrl'],['mAttribution','attribution']]) document.getElementById(id).value = m[key] || '';
+        document.getElementById('mFree').checked = Boolean(m.isFree);
+        for(const mood of ['cozy','thoughtful','adrenaline','emotional','epic'])document.getElementById('mMood_'+mood).checked=(m.moods||[]).includes(mood);
+        document.getElementById('mIntensity').value=m.intensity||3;
+        document.getElementById('mVibeTags').value=(m.vibeTags||[]).join(', ');
+        document.getElementById('mPublished').checked=m.published!==false;
+        document.getElementById('mGenre').value = m.genreID;
+        document.getElementById('mDirector').value = m.directorID;
+        document.getElementById('mCountry').value = m.countryID;
+        document.getElementById('mAge').value = m.ageRestriction;
         document.getElementById('mSubtitle').checked = m.subtitleAvailable;
         document.getElementById('m3D').checked = m.is3D;
         showSection('add-movie');
@@ -394,6 +418,15 @@
         ageRestriction: document.getElementById('mAge').value,
         productionCompany: document.getElementById('mStudio').value,
         posterUrl: document.getElementById('mPoster').value,
+        trailerUrl: document.getElementById('mTrailer').value,
+        watchUrl: document.getElementById('mWatch').value,
+        licenseUrl: document.getElementById('mLicense').value,
+        attribution: document.getElementById('mAttribution').value,
+        isFree: document.getElementById('mFree').checked,
+        moods:['cozy','thoughtful','adrenaline','emotional','epic'].filter(x=>document.getElementById('mMood_'+x).checked),
+        vibeTags:document.getElementById('mVibeTags').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,8),
+        intensity:Number(document.getElementById('mIntensity').value),
+        published:document.getElementById('mPublished').checked,
         subtitleAvailable: document.getElementById('mSubtitle').checked,
         is3D: document.getElementById('m3D').checked
       };
@@ -463,12 +496,12 @@
               <td style="padding:14px;color:#555;">#${u.userID}</td>
               <td><div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:32px;height:32px;border-radius:50%;background:#e50914;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;">${(u.username||'U')[0].toUpperCase()}</div>
-                <span style="font-weight:600;color:#fff;">${u.username}</span>
+                <span style="font-weight:600;color:#fff;">${escapeHtml(u.username)}</span>
               </div></td>
-              <td style="color:#888;">${u.email}</td>
+              <td style="color:#888;">${escapeHtml(u.email)}</td>
               <td><span style="background:rgba(245,197,24,0.15);color:#f5c518;padding:2px 8px;border-radius:4px;font-size:12px;">${u.reviewCount} reviews</span></td>
               <td style="color:#555;font-size:12px;">${formatDate(u.registrationDate)}</td>
-              <td><button onclick="deleteUser(${u.userID},'${u.username}')" style="background:rgba(229,9,20,0.15);border:none;color:#e50914;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;"><i class="bi bi-trash"></i></button></td>
+              <td><button onclick="deleteUser('${u.userID}','${escapeHtml(u.username)}')" style="background:rgba(229,9,20,0.15);border:none;color:#e50914;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;"><i class="bi bi-trash"></i></button></td>
             </tr>`).join('')}
           </tbody>
         </table>`;
@@ -550,13 +583,13 @@
           </tr></thead>
           <tbody>${rows.map(row => `<tr>${cols.map(c => {
             let val = row[c];
-            let display = val === null || val === undefined ? '<span style="color:#444;">NULL</span>' : String(val);
-            if (isPassCol(c) && val) display = `<span style="font-family:monospace;font-size:11px;color:#e50914;background:rgba(229,9,20,0.1);padding:2px 6px;border-radius:4px;" title="${val}">${val.substring(0,16)}…</span>`;
-            else if (c.toLowerCase().includes('url') && val) display = val.startsWith('http') ? `<a href="${val}" target="_blank" style="color:#38bdf8;max-width:120px;display:inline-block;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">${val.substring(0,30)}…</a>` : display;
+            let display = val === null || val === undefined ? '<span style="color:#444;">NULL</span>' : escapeHtml(val);
+            if (isPassCol(c) && val) display = `<span style="font-family:monospace;font-size:11px;color:#e50914;background:rgba(229,9,20,0.1);padding:2px 6px;border-radius:4px;" title="${escapeHtml(val)}">${escapeHtml(val.substring(0,16))}…</span>`;
+            else if (c.toLowerCase().includes('url') && val) display = val.startsWith('http') ? `<a href="${escapeHtml(safeUrl(val))}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;max-width:120px;display:inline-block;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">${escapeHtml(val.substring(0,30))}…</a>` : display;
             else if (c.toLowerCase().includes('date') && val) display = `<span style="color:#888;">${new Date(val).toLocaleString()}</span>`;
             else if (typeof val === 'boolean') display = val ? '<span style="color:#46d369;">✓ Yes</span>' : '<span style="color:#e50914;">✗ No</span>';
             else if (typeof val === 'number') display = `<span style="color:#f5c518;">${val.toLocaleString()}</span>`;
-            else if (typeof val === 'string' && val.length > 60) display = `<span title="${val}">${val.substring(0,60)}…</span>`;
+            else if (typeof val === 'string' && val.length > 60) display = `<span title="${escapeHtml(val)}">${escapeHtml(val.substring(0,60))}…</span>`;
             return `<td style="padding:10px 16px;border-bottom:1px solid #1e1e1e;max-width:200px;">${display}</td>`;
           }).join('')}</tr>`).join('')}</tbody>
         </table>`;
@@ -574,7 +607,7 @@
     loadMeta();
     loadDashboard();
 
-    function logout() { localStorage.removeItem('cinemax_admin'); window.location.href = 'login.html'; }
+    async function logout() { await api.post('/auth/logout', {}).catch(() => {}); localStorage.removeItem('cinemax_admin'); localStorage.removeItem('cinemax_user'); window.location.href = 'login.html'; }
   </script>
 <script src="js/keepalive.js"></script></body>
 </html>

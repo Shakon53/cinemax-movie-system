@@ -1,3 +1,13 @@
+# CineMax — Supabase + Netlify
+
+Текущий вариант без VPS: [настройка Supabase, регистрации и адреса сайта](SETUP-SUPABASE.md).
+
+Публичная папка: `Frontend`. Проверки: `npm ci` и `npm test`.
+
+Ниже сохранено описание исходного .NET-шаблона; инструкции MSSQL/Azure SQL не относятся к текущему Supabase-варианту.
+
+---
+
 # 🎬 CineMax — Movie Management System
 
 Full-stack Movie Management System built with ASP.NET Core 8 + MSSQL + Bootstrap 5.

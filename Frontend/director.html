@@ -7,13 +7,16 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg">
     <div class="container-fluid px-0">
       <a class="navbar-brand" href="index.html">CINE<span>MAX</span></a>
-      <div class="collapse navbar-collapse">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Открыть меню"><i class="bi bi-list" style="color:var(--text-primary);font-size:24px"></i></button>
+      <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Home</a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i>Actors</a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i>Reviews</a></li>
@@ -37,7 +40,10 @@
 
   <div id="toastContainer" class="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/config.js"></script>
+<script src="vendor/supabase-2.117.3.js"></script>
+<script src="js/supabase-api.js"></script>
+<script src="js/api.js"></script>
   <script>
     const id = new URLSearchParams(location.search).get('id');
     if (!id) window.location.href = '404.html';
@@ -58,7 +64,7 @@
           <div class="d-flex gap-4 flex-wrap align-items-center mb-5">
             <div style="width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#e50914,#b20710);display:flex;align-items:center;justify-content:center;font-size:56px;flex-shrink:0;">🎬</div>
             <div>
-              <h1 style="font-size:clamp(24px,4vw,40px);font-weight:900;">${d.fullName}</h1>
+              <h1 style="font-size:clamp(24px,4vw,40px);font-weight:900;">${escapeHtml(d.fullName)}</h1>
               <div class="d-flex gap-3 flex-wrap mt-2">
                 <span class="stat-box px-3 py-2"><i class="bi bi-camera-reels me-1 text-danger"></i>${d.experienceYears} yrs exp</span>
                 <span class="stat-box px-3 py-2"><i class="bi bi-trophy me-1 text-warning"></i>${d.awardsCount} awards</span>
@@ -72,10 +78,10 @@
           <div class="movies-grid">
             ${films.map(m => `
               <div class="movie-card" onclick="window.location='movie.html?id=${m.movieID}'" style="cursor:pointer;">
-                ${m.posterUrl ? `<img class="movie-poster" src="${m.posterUrl}" alt="${m.title}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
+                ${m.posterUrl ? `<img class="movie-poster" src="${escapeHtml(safeUrl(m.posterUrl))}" alt="${escapeHtml(m.title)}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
                 <div class="movie-info">
-                  <div class="movie-title">${m.title}</div>
-                  <div class="movie-meta"><span class="movie-year">${m.releaseYear}</span><span class="movie-genre">${m.genreName}</span></div>
+                  <div class="movie-title">${escapeHtml(m.title)}</div>
+                  <div class="movie-meta"><span class="movie-year">${m.releaseYear}</span><span class="movie-genre">${escapeHtml(m.genreName)}</span></div>
                   <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
                 </div>
               </div>`).join('')}
