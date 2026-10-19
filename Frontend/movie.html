@@ -127,7 +127,7 @@
           </div>
         </div>
 
-        ${m.isFree && m.watchUrl ? `<section class="movies-section"><h2>Бесплатный просмотр</h2><p>${escapeHtml(m.attribution)}</p><a class="btn-red" href="${escapeHtml(safeUrl(m.watchUrl))}" target="_blank" rel="noopener noreferrer">Открыть фильм у правообладателя ↗</a> <a href="${escapeHtml(safeUrl(m.licenseUrl))}" target="_blank" rel="noopener noreferrer">Лицензия</a></section>` : ""}
+        ${m.isFree && m.watchUrl ? `<section class="movies-section"><h2>Бесплатный просмотр</h2><p>${escapeHtml(m.attribution)}</p><a class="btn-red" href="${escapeHtml(safeUrl(m.watchUrl))}" target="_blank" rel="noopener noreferrer">Открыть фильм у правообладателя ↗</a> <a href="${escapeHtml(safeUrl(m.licenseUrl))}" target="_blank" rel="noopener noreferrer">Источник и условия просмотра</a></section>` : ""}
         <section class="movies-section" id="fullMovieSection" hidden><h2 class="section-title">Смотреть фильм полностью</h2><div id="fullMoviePlayer"></div><p id="fullMovieStatus" class="movie-watch-note" role="status"></p></section>
         <!-- TRAILER -->
         <div class="movies-section" id="trailerSection" style="display:none;">
