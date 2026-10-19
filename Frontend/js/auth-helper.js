@@ -32,6 +32,7 @@ function renderUserNav() {
             </div>
           </div>
           <div class="user-dropdown-divider"></div>
+          <a href="profile.html" class="user-dropdown-item"><i class="bi bi-journal me-2"></i>Мой кино-дневник</a>
           <a href="favorites.html" class="user-dropdown-item"><i class="bi bi-heart me-2"></i>My Favorites</a>
           <a href="reviews.html" class="user-dropdown-item"><i class="bi bi-chat-square-text me-2"></i>Write a Review</a>
           <div class="user-dropdown-divider"></div>

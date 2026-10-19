@@ -11,7 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
-<link href="css/features.css" rel="stylesheet">
+<link href="css/features.css" rel="stylesheet"><link href="css/journey.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg">
@@ -20,6 +20,7 @@
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Открыть меню"><i class="bi bi-list" style="color:var(--text-primary);font-size:24px"></i></button>
       <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="profile.html"><i class="bi bi-journal me-1"></i>Мой дневник</a></li>
 <li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
@@ -62,7 +63,7 @@
 <script src="vendor/supabase-2.117.3.js"></script>
 <script src="js/supabase-api.js"></script>
 <script src="js/api.js"></script>
-  <script src="js/auth-helper.js"></script>
+  <script src="js/auth-helper.js"></script><script src="js/favorites.js"></script><script src="js/journey.js"></script><script src="js/movie-watch.js"></script>
   <script>
     const id = new URLSearchParams(location.search).get('id');
     let userRating = 0, trailerId = '';
@@ -96,13 +97,13 @@
               </div>
               <h1 class="movie-detail-info" style="font-size:36px;font-weight:900;">${escapeHtml(m.title)}</h1>
               <div class="movie-detail-meta">
-                <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating.toFixed(1)} · рейтинг каталога</span>
+                <span class="meta-badge rating"><i class="bi bi-star-fill me-1"></i>${m.rating>0?m.rating.toFixed(1):'—'} · рейтинг каталога</span>
                 <span class="meta-badge"><i class="bi bi-calendar me-1"></i>${m.releaseYear}</span>
                 <span class="meta-badge"><i class="bi bi-clock me-1"></i>${m.durationMinutes} min</span>
                 <span class="meta-badge"><i class="bi bi-translate me-1"></i>${escapeHtml(m.languageName)}</span>
                 ${m.discountPercent > 0 ? `<span class="meta-badge discount"><i class="bi bi-tag me-1"></i>-${m.discountPercent}% OFF</span>` : ''}
               </div>
-              <p class="movie-description">${escapeHtml(m.description)}</p>
+              <p class="movie-description">${escapeHtml(m.description)}</p><div id="journeyWidget"></div>
               <div class="d-flex gap-2 mb-4" style="flex-wrap:wrap;">
                 <a href="movie.html?id=${m.movieID}" class="btn-red" style="padding:10px 24px;"><i class="bi bi-info-circle me-2"></i>Details</a>
                 ${trailerId ? `<button onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;"><i class="bi bi-play-circle me-2"></i>Watch Trailer</button>` : ''}
@@ -127,6 +128,7 @@
         </div>
 
         ${m.isFree && m.watchUrl ? `<section class="movies-section"><h2>Бесплатный просмотр</h2><p>${escapeHtml(m.attribution)}</p><a class="btn-red" href="${escapeHtml(safeUrl(m.watchUrl))}" target="_blank" rel="noopener noreferrer">Открыть фильм у правообладателя ↗</a> <a href="${escapeHtml(safeUrl(m.licenseUrl))}" target="_blank" rel="noopener noreferrer">Лицензия</a></section>` : ""}
+        <section class="movies-section" id="fullMovieSection" hidden><h2 class="section-title">Смотреть фильм полностью</h2><div id="fullMoviePlayer"></div><p id="fullMovieStatus" class="movie-watch-note" role="status"></p></section>
         <!-- TRAILER -->
         <div class="movies-section" id="trailerSection" style="display:none;">
           <h2 class="section-title mb-4"><i class="bi bi-play-circle me-2" style="color:#e50914"></i>Official Trailer</h2>
@@ -210,7 +212,7 @@
                 <div class="actor-photo-placeholder" ${a.photoUrl ? 'style="display:none"' : ''}>🎭</div>
                 <div class="actor-name">${escapeHtml(a.fullName)}</div>
                 <div class="actor-role">${a.roleName || 'Actor'}</div>
-                <div class="actor-meta">${a.age} yrs • ${escapeHtml(a.countryName)}</div>
+                <div class="actor-meta">${a.age>0?a.age+' yrs':'Возраст не указан'} • ${escapeHtml(a.countryName)}</div>
                 ${a.oscarAwards > 0 ? `<div class="actor-meta" style="padding-bottom:12px;color:#f5c518;">🏆 ${a.oscarAwards} Oscar${a.oscarAwards>1?'s':''}</div>` : ''}
               </div>`).join('')}
           </div>` : ''}
@@ -272,6 +274,8 @@
       document.getElementById('reviewForm').addEventListener('submit', submitReview);
 
       loadSimilar(m.genreID, m.movieID);
+      CineMaxJourney.loadMovie(m.movieID);
+      CineMaxWatch.mount(m);
       if (trailerId) {
         document.getElementById('trailerSection').style.display = '';
         const poster = document.getElementById('trailerPoster');
@@ -300,7 +304,7 @@
             ${m.posterUrl ? `<img class="movie-poster" src="${escapeHtml(safeUrl(m.posterUrl))}" alt="${escapeHtml(m.title)}" loading="lazy">` : '<div class="movie-poster-placeholder">🎬</div>'}
             <div class="movie-info">
               <div class="movie-title" style="font-size:13px;">${escapeHtml(m.title)}</div>
-              <span class="movie-rating" style="font-size:12px;"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
+              <span class="movie-rating" style="font-size:12px;"><i class="bi bi-star-fill"></i> ${m.rating>0?m.rating.toFixed(1):'—'}</span>
             </div>
           </div>`).join('');
       } catch(e) {}

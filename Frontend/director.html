@@ -82,7 +82,7 @@
                 <div class="movie-info">
                   <div class="movie-title">${escapeHtml(m.title)}</div>
                   <div class="movie-meta"><span class="movie-year">${m.releaseYear}</span><span class="movie-genre">${escapeHtml(m.genreName)}</span></div>
-                  <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
+                  <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating>0?m.rating.toFixed(1):'—'}</span>
                 </div>
               </div>`).join('')}
           </div>` : '<div class="empty-state"><i class="bi bi-film"></i><h3>No films found</h3></div>'}

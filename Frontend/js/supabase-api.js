@@ -14,6 +14,7 @@ const supabaseApi = (() => {
     if (result.error) {
       if (result.error.code === '23505') throw new Error('Такое имя или запись уже существует.');
       if (result.error.code === '42501') throw new Error('Недостаточно прав. Войдите в нужный аккаунт.');
+      if (['42P01','PGRST205'].includes(result.error.code)) throw new Error('Личный дневник временно недоступен. Попробуйте позже.');
       throw new Error(result.error.message || 'Ошибка Supabase.');
     }
     return result.data;
@@ -49,7 +50,7 @@ const supabaseApi = (() => {
     genres: ['genres','genreID'], countries: ['countries','countryID'], directors: ['directors','directorID'],
     movieactors: ['movieactors','movieActorID'], ratings: ['ratings','ratingID'], discounts: ['discounts','discountID'], boxoffice: ['boxoffice','boxOfficeID'] };
   const writable = {
-    movies: ['title','description','releaseYear','durationMinutes','countryID','directorID','genreID','mainActorID','budget','boxOffice','rating','discountPercent','languageName','ageRestriction','productionCompany','subtitleAvailable','is3D','posterUrl','trailerUrl','watchUrl','licenseUrl','attribution','isFree','moods','vibeTags','intensity','published'],
+    movies: ['title','description','releaseYear','durationMinutes','countryID','directorID','genreID','mainActorID','budget','boxOffice','rating','discountPercent','languageName','ageRestriction','productionCompany','subtitleAvailable','is3D','posterUrl','trailerUrl','watchUrl','watchSourceUrl','licenseUrl','attribution','isFree','moods','vibeTags','intensity','published'],
     actors: ['fullName','age','gender','countryID','oscarAwards','salary','photoUrl']
   };
   async function movieList(params) {
@@ -60,8 +61,30 @@ const supabaseApi = (() => {
     if (search) {
       // Strip PostgREST filter syntax; user input cannot introduce another filter.
       const term = search.replace(/[(),.*%_\\"]/g, ' ').trim().slice(0, 100);
-      if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+      if (term) {
+        const aliases=[['дикаприо','Leonardo DiCaprio'],['леонардо','Leonardo DiCaprio'],['том хэнкс','Tom Hanks'],['том ханкс','Tom Hanks'],['том харди','Tom Hardy'],['томас харди','Tom Hardy'],['гослинг','Ryan Gosling'],['джим керри','Jim Carrey'],['джим кэрри','Jim Carrey'],['эми адамс','Amy Adams'],['хью джекман','Hugh Jackman'],['эмма стоун','Emma Stone'],['хэтэуэй','Anne Hathaway'],['уинслет','Kate Winslet'],['бэйл','Christian Bale'],['бейл','Christian Bale'],['киллиан','Cillian Murphy'],['мерфи','Cillian Murphy'],['шаламе','Timothee Chalamet']];
+        const actorTerm=aliases.find(([name])=>term.toLowerCase().includes(name))?.[1]||term;
+        const actors = value(await db().from('actors').select('actorID').ilike('fullName', `%${actorTerm}%`)) || [];
+        const actorIds = actors.map(a=>a.actorID).filter(Number.isSafeInteger);
+        const cast = actorIds.length ? value(await db().from('movieactors').select('movieID').in('actorID',actorIds)) || [] : [];
+        const clauses = [`title.ilike.%${term}%`,`description.ilike.%${term}%`];
+        if (actorIds.length) clauses.push(`mainActorID.in.(${actorIds.join(',')})`);
+        const castIds = [...new Set(cast.map(c=>c.movieID))].filter(Number.isSafeInteger);
+        if (castIds.length) clauses.push(`movieID.in.(${castIds.join(',')})`);
+        query = query.or(clauses.join(','));
+      }
     }
+    if (params.get('actorId')) {
+      const id = Number(params.get('actorId'));
+      if (!Number.isSafeInteger(id) || id < 1) throw new Error('Некорректный актёр.');
+      const [cast,main] = await Promise.all([
+        db().from('movieactors').select('movieID').eq('actorID',id),
+        db().from('movies').select('movieID').eq('mainActorID',id)
+      ]);
+      const ids = [...new Set([...(value(cast)||[]),...(value(main)||[])].map(m=>m.movieID))];
+      query = query.in('movieID',ids.length?ids:[-1]);
+    }
+    if (Number(params.get('minMinutes')) > 0) query = query.gte('durationMinutes',Number(params.get('minMinutes')));
     if (params.get('genreId')) query = query.eq('genreID', Number(params.get('genreId')));
     if (params.get('year')) query = query.eq('releaseYear', Number(params.get('year')));
     if (params.get('mood')) query = query.contains('moods', [params.get('mood')]);
@@ -82,6 +105,12 @@ const supabaseApi = (() => {
     if (name === 'favorites') {
       await currentUser();
       return (value(await db().from('favorites').select('movie_id')) || []).map(x => x.movie_id);
+    }
+    if (name === 'journey') {
+      const user = await currentUser();
+      let q = db().from('movie_journey').select(`*,movie:movies(${movieSelect})`).eq('user_id',user.userID).order('updated_at',{ascending:false});
+      if (url.searchParams.get('movieId')) q = q.eq('movie_id',Number(url.searchParams.get('movieId')));
+      return (value(await q)||[]).map(row=>({...row,movie:row.movie?movie(row.movie):null}));
     }
     if (name === 'movies') {
       if (!id) return (await movieList(url.searchParams)).data;
@@ -108,6 +137,20 @@ const supabaseApi = (() => {
     throw new Error('Неизвестный запрос: ' + path);
   }
   async function post(path, body) {
+    if (path === '/journey') {
+      const user = await currentUser();
+      if (!['want','watched'].includes(body.status)) throw new Error('Выберите статус фильма.');
+      const id=Number(body.movieID);
+      if (!Number.isSafeInteger(id)||id<1) throw new Error('Некорректный фильм.');
+      const watched=body.status==='watched';
+      const rating=watched && body.rating!=='' && body.rating!=null ? Number(body.rating) : null;
+      if (rating!==null && (!Number.isInteger(rating)||rating<1||rating>10)) throw new Error('Оценка должна быть целым числом от 1 до 10.');
+      const note=watched?String(body.note||'').trim():'';
+      if(note.length>2000)throw new Error('Заметка: максимум 2000 символов.');
+      const date=watched?String(body.watched_on||''):null;
+      if(watched && (!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))))throw new Error('Укажите дату просмотра.');
+      return value(await db().from('movie_journey').upsert({user_id:user.userID,movie_id:id,status:body.status,rating,note,watched_on:date,updated_at:new Date().toISOString()},{onConflict:'user_id,movie_id'}).select().single());
+    }
     if (path === '/auth/password-reset') {
       value(await db().auth.resetPasswordForEmail(body.email.trim(), { redirectTo: new URL('reset.html', location.href).href }));
       return null;
@@ -164,6 +207,11 @@ const supabaseApi = (() => {
   }
   async function remove(path) {
     const parts = path.split('/').filter(Boolean);
+    if (parts[0] === 'journey') {
+      const user=await currentUser();
+      value(await db().from('movie_journey').delete().eq('user_id',user.userID).eq('movie_id',Number(parts[1])));
+      return null;
+    }
     if (parts[0] === 'auth' && parts[1] === 'users') return value(await db().rpc('admin_delete_user', { target: parts[2] }));
     if (parts[0] === 'favorites') {
       const user = await currentUser();
@@ -180,6 +228,7 @@ const supabaseApi = (() => {
   }
   const matchMethods = new Set(['create_movie_match','join_movie_match','movie_match_state','start_movie_match','vote_movie_match']);
   return { get, getWithHeaders: path => movieList(new URL(path, 'https://cinemax.local').searchParams), post, put, delete: remove,
+    recommend: async body => value(await db().functions.invoke('movie-concierge',{body})),
     match: async (method, args) => { if (!matchMethods.has(method)) throw new Error('Неизвестная операция комнаты.'); return value(await db().rpc(method, args)); },
     hasSession: async () => Boolean(value(await db().auth.getSession())?.session) };
 })();

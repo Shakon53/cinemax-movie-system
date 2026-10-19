@@ -146,8 +146,11 @@
 <script>
   if (localStorage.getItem('cinemax_theme') === 'light') document.body.classList.add('light-mode');
 
-  api.get('/auth/me').then(() => { window.location.href = 'index.html'; }).catch(() => localStorage.removeItem('cinemax_user'));
+  api.get('/auth/me').then(() => { window.location.href = authDestination(); }).catch(() => localStorage.removeItem('cinemax_user'));
 
+  function authDestination() {
+    try { const target=new URL(new URLSearchParams(location.search).get('returnTo')||'index.html',location.href); return target.origin===location.origin && /\/(?:index|movie|profile|favorites|match)(?:\.html)?$/.test(target.pathname) ? target.href : 'index.html'; } catch { return 'index.html'; }
+  }
   function switchTab(tab) {
     const isLogin = tab === 'login';
     document.getElementById('tabLogin').classList.toggle('active', isLogin);

@@ -1,5 +1,5 @@
 function appendDiscoveryFilters(params) {
-  for (const [id, key] of [['moodSelect','mood'],['timeSelect','maxMinutes'],['intensitySelect','intensity']]) {
+  for (const [id, key] of [['moodSelect','mood'],['timeSelect','maxMinutes'],['minTimeSelect','minMinutes'],['intensitySelect','intensity'],['actorSelect','actorId']]) {
     const value = document.getElementById(id)?.value;
     if (value) params.set(key, value);
   }
@@ -7,11 +7,11 @@ function appendDiscoveryFilters(params) {
   return params;
 }
 document.addEventListener('DOMContentLoaded', () => {
-  for (const id of ['moodSelect','timeSelect','intensitySelect','accessSelect']) {
+  for (const id of ['moodSelect','timeSelect','minTimeSelect','intensitySelect','accessSelect','actorSelect']) {
     document.getElementById(id)?.addEventListener('change', () => { currentPage = 1; loadMovies(); });
   }
   document.getElementById('resetDiscovery')?.addEventListener('click', () => {
-    for (const id of ['moodSelect','timeSelect','intensitySelect','accessSelect','yearSelect','searchInput']) document.getElementById(id).value = '';
+    for (const id of ['moodSelect','timeSelect','minTimeSelect','intensitySelect','accessSelect','yearSelect','searchInput','actorSelect']) {const el=document.getElementById(id);if(el)el.value = '';}
     currentGenre = ''; currentPage = 1;
     const all = document.querySelector('#genreFilters [data-genre=""]');
     if (all) setActiveGenre(all);

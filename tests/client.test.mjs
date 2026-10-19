@@ -38,9 +38,9 @@ async function adapterContext() {
     from(table) {
       calls.push(['from', table]);
       const query = {};
-      for (const method of ['select','eq','contains','lte','order','range','or','insert','update','delete']) query[method] = (...args) => { calls.push([method, table, ...args]); return query; };
+      for (const method of ['select','eq','contains','ilike','in','gte','upsert','lte','order','range','or','insert','update','delete']) query[method] = (...args) => { calls.push([method, table, ...args]); return query; };
       query.single = async () => ({ data: table === 'profiles' ? { username: 'alice' } : state.data });
-      query.then = (resolve, reject) => Promise.resolve({ data: state.data, count: state.count }).then(resolve, reject);
+      query.then = (resolve, reject) => Promise.resolve({ data: state.tables?.[table] ?? state.data, count: state.count }).then(resolve, reject);
       return query;
     }
   };
@@ -82,6 +82,20 @@ test('movie pagination and relation mapping preserve the existing page contract'
   assert.deepEqual(calls.find(c => c[0] === 'range').slice(2), [10,19]);
   const search = calls.find(c => c[0] === 'or')[2];
   assert.equal(search.includes('rating.gt.0'), false);
+});
+
+test('actor name searches include both leading actors and cast links',async()=>{
+ const {api,calls,state}=await adapterContext();state.tables={actors:[{actorID:1}],movieactors:[{movieID:7}],movies:[]};
+ await api.getWithHeaders('/movies?search='+encodeURIComponent('ДиКаприо'));
+ assert.equal(calls.find(c=>c[0]==='ilike')[3],'%Leonardo DiCaprio%');
+ const filter=calls.find(c=>c[0]==='or')[2];assert.ok(filter.includes('mainActorID.in.(1)'));assert.ok(filter.includes('movieID.in.(7)'));
+});
+
+test('diary upserts bind the authenticated user and reject invalid personal scores',async()=>{
+ const {api,calls}=await adapterContext();
+ await api.post('/journey',{user_id:'victim',movieID:1,status:'watched',watched_on:'2026-10-19',rating:9,note:'Private'});
+ const row=calls.find(c=>c[0]==='upsert')[2];assert.equal(row.user_id,'alice');assert.equal(row.note,'Private');
+ await assert.rejects(api.post('/journey',{movieID:1,status:'watched',watched_on:'2026-10-19',rating:11}),/от 1 до 10/);
 });
 
 test('cloud favorites never copy a previous local guest list into an account', async () => {
