@@ -48,6 +48,20 @@ test('login returns to Netlify pretty movie URLs and rejects external destinatio
  assert.equal(c.authDestination(),'index.html');
 });
 
+test('expired confirmation gives recovery instructions and never redirects or marks account confirmed',async()=>{
+ const {document}=screen();let requested=false,cleaned=false;
+ const c=vm.createContext({document,window:{location:{}},URLSearchParams,location:{hash:'#error=access_denied&error_code=otp_expired',search:'',pathname:'/auth'},history:{state:null,replaceState(){cleaned=true;}},localStorage:{getItem(){return null;},setItem(){throw Error('Must not create session');}},api:{get(){requested=true;}}});
+ vm.runInContext(inline(await file('auth.html')),c);
+ assert.match(document.getElementById('alertError').textContent,/истекла или уже использована/);assert.equal(document.getElementById('alertError').style.display,'block');assert.equal(requested,false);assert.equal(cleaned,true);assert.equal(c.window.location.href,undefined);
+});
+
+test('successful email callback waits for authenticated identity before redirecting',async()=>{
+ const {document}=screen(),store=new Map();let resolve;
+ const c=vm.createContext({document,window:{location:{}},URL,URLSearchParams,location:{hash:'#access_token=example&type=signup',search:'',pathname:'/auth',href:'https://site.test/auth',origin:'https://site.test'},localStorage:{getItem(){return null;},setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},api:{get:()=>new Promise(r=>{resolve=r;})}});
+ vm.runInContext(inline(await file('auth.html')),c);assert.equal(c.window.location.href,undefined);
+ resolve({userID:'alice',username:'Alice'});await new Promise(r=>setImmediate(r));assert.equal(c.window.location.href,'https://site.test/index.html');assert.equal(JSON.parse(store.get('cinemax_user')).userID,'alice');
+});
+
 test('slow earlier catalog requests cannot overwrite newer search results',async()=>{
   const {document}=screen();const requests=[];
   const c=vm.createContext({document,window:{},location:{search:''},CineMaxCatalog:{restore(){},save(){},rendered(){}},localStorage:{getItem(){return null;}},URLSearchParams,

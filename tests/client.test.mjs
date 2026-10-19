@@ -31,6 +31,7 @@ async function adapterContext() {
       getSession: async () => ({ data: { session: state.session } }),
       signInWithPassword: async body => { calls.push(['signIn', body]); return { data: {} }; },
       signOut: async () => ({ data: null }),
+      resend: async body => {calls.push(['resend',body]);return {data:{}};},
       resetPasswordForEmail: async (...args) => { calls.push(['resetPassword', ...args]); return { data: {} }; },
       updateUser: async body => { calls.push(['updateUser', body]); return { data: {} }; }
     },
@@ -57,6 +58,13 @@ test('signup without a session requires email confirmation and never invents a l
   assert.equal(calls[0][1].options.emailRedirectTo, 'https://cinemax-test.netlify.app/auth.html');
   assert.equal(calls.some(c => c[0] === 'rpc'), false);
   await assert.rejects(api.post('/auth/register', { username: '<script>', email: 'x@example.test', password: 'long-password' }), /Имя/);
+});
+
+test('resending confirmation uses signup flow and canonical site URL without callback tokens',async()=>{
+ const {api,calls,context}=await adapterContext();context.location.href='https://cinemax-test.netlify.app/auth?returnTo=/movie#access_token=secret';
+ await api.post('/auth/resend-confirmation',{email:' alice@example.test '});
+ const request=calls.find(c=>c[0]==='resend')[1];assert.equal(request.type,'signup');assert.equal(request.email,'alice@example.test');assert.equal(request.options.emailRedirectTo,'https://cinemax-test.netlify.app/auth.html');
+ await assert.rejects(api.post('/auth/resend-confirmation',{email:''}),/email/);
 });
 
 test('reviews use the authenticated identity and ordinary users cannot edit the catalog', async () => {

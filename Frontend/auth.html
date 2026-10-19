@@ -94,6 +94,7 @@
           <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
         </button>
         <button type="button" class="auth-tab" onclick="requestPasswordReset()">Забыли пароль?</button>
+        <button type="button" class="auth-tab" id="resendBtn" onclick="resendConfirmation()">Отправить подтверждение email ещё раз</button>
       </form>
 
       <!-- REGISTER FORM -->
@@ -146,7 +147,31 @@
 <script>
   if (localStorage.getItem('cinemax_theme') === 'light') document.body.classList.add('light-mode');
 
-  api.get('/auth/me').then(() => { window.location.href = authDestination(); }).catch(() => localStorage.removeItem('cinemax_user'));
+  initializeAuth();
+
+  async function initializeAuth() {
+    const hash=typeof location==='undefined'?'':location.hash||'';
+    const search=typeof location==='undefined'?'':location.search||'';
+    const callback=hash||search;
+    if(callback){
+      const h=new URLSearchParams(hash.replace(/^#/,'')),q=new URLSearchParams(search);
+      const code=h.get('error_code')||q.get('error_code');
+      if(code||h.get('error')||q.get('error')){
+        showError(code==='otp_expired'?'Ссылка подтверждения истекла или уже использована. Попробуйте войти с email и паролем. Если email ещё не подтверждён, запросите новое письмо кнопкой ниже.':'Не удалось подтвердить email. Попробуйте войти или запросите новое письмо подтверждения.');
+        if(typeof history!=='undefined')history.replaceState(history.state,'',location.pathname+location.search);
+        return;
+      }
+      if(h.get('type')==='recovery'){window.location.href='reset.html'+search+hash;return;}
+    }
+    try {
+      const user=await api.get('/auth/me');
+      localStorage.setItem('cinemax_user',JSON.stringify(user));
+      window.location.href=authDestination();
+    } catch {
+      localStorage.removeItem('cinemax_user');
+      if(/access_token=|(?:[?&])code=/.test(callback))showError('Не удалось завершить вход по ссылке. Введите email и пароль. Если нужно, запросите новое письмо подтверждения.');
+    }
+  }
 
   function authDestination() {
     try { const target=new URL(new URLSearchParams(location.search).get('returnTo')||'index.html',location.href); return target.origin===location.origin && /\/(?:index|movie|profile|favorites|match)(?:\.html)?$/.test(target.pathname) ? target.href : 'index.html'; } catch { return 'index.html'; }
@@ -217,6 +242,15 @@
     catch (error) { showError(error.message); }
   }
 
+  async function resendConfirmation() {
+    const email=document.getElementById('loginEmail');
+    if(!email.reportValidity())return;
+    const button=document.getElementById('resendBtn');button.disabled=true;clearAlerts();
+    try {await api.post('/auth/resend-confirmation',{email:email.value});showSuccess('Если для этого email ожидается подтверждение, новое письмо отправлено. Используйте последнюю ссылку из почты.');}
+    catch(error){showError(error.message||'Не удалось отправить письмо. Попробуйте позже.');}
+    finally {button.disabled=false;}
+  }
+
   async function doLogin(e) {
     e.preventDefault();
     clearAlerts();
@@ -228,7 +262,7 @@
       localStorage.setItem('cinemax_user', JSON.stringify(data));
       if (data.role === 'Admin') localStorage.setItem('cinemax_admin', 'true');
       showSuccess('Welcome back, ' + data.username + '! Redirecting...');
-      setTimeout(() => window.location.href = 'index.html', 1200);
+      setTimeout(() => window.location.href = authDestination(), 1200);
     } catch (err) {
       showError(err.message || 'Не удалось подключиться.');
     } finally {
@@ -248,7 +282,7 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
     try {
       const data = await api.post('/auth/register', { username: document.getElementById('regUsername').value, email: document.getElementById('regEmail').value, password: pass });
-      if (data.requiresEmailConfirmation) { showSuccess('Проверьте почту и подтвердите email по ссылке. Затем войдите в аккаунт.'); e.target.reset(); return; }
+      if (data.requiresEmailConfirmation) { document.getElementById('loginEmail').value=document.getElementById('regEmail').value;switchTab('login');showSuccess('Проверьте почту и подтвердите email по последней ссылке из письма. После подтверждения откроется CineMax. Если письмо не пришло, отправьте его повторно кнопкой ниже.'); e.target.reset(); return; }
       localStorage.setItem('cinemax_user', JSON.stringify(data));
       if (data.role === 'Admin') localStorage.setItem('cinemax_admin', 'true');
       showSuccess('Account created! Welcome, ' + data.username + '!');

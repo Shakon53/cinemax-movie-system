@@ -157,6 +157,13 @@ const supabaseApi = (() => {
       value(await db().auth.resetPasswordForEmail(body.email.trim(), { redirectTo: new URL('reset.html', location.href).href }));
       return null;
     }
+    if (path === '/auth/resend-confirmation') {
+      const email=String(body.email||'').trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Укажите email, использованный при регистрации.');
+      const result=await db().auth.resend({type:'signup',email,options:{emailRedirectTo:new URL('/auth.html',location.href).href}});
+      if(result.error){if(['over_email_send_rate_limit','over_request_rate_limit'].includes(result.error.code))throw new Error('Письмо недавно отправлено. Подождите немного и попробуйте снова.');value(result);}
+      return null;
+    }
     if (path === '/auth/password-update') {
       if (body.password.length < 10) throw new Error('Пароль должен содержать минимум 10 символов.');
       value(await db().auth.updateUser({ password: body.password }));
