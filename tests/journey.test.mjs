@@ -23,6 +23,9 @@ test('private diary, catalog expansion, full films and AI rate limit execute in 
   for(let run=0;run<2;run++)await db.exec(await read('supabase/migrations/202610190008_official_full_movies.sql'));
   assert.equal((await db.query('select count(*)::int n from public.movies where published')).rows[0].n,41);
   assert.equal((await db.query('select count(*)::int n from public.movies where "watchSourceUrl" like \'https://rutube.ru/play/embed/%\' and "isFree" and "languageName"=\'Русский\'')).rows[0].n,5);
+  for(let run=0;run<2;run++)await db.exec(await read('supabase/migrations/202610190009_modern_full_movies.sql'));
+  assert.equal((await db.query('select count(*)::int n from public.movies where published')).rows[0].n,47);
+  assert.equal((await db.query('select count(*)::int n from public.movies where "isFree" and "releaseYear">=2015 and "durationMinutes">60 and "posterUrl" like \'/assets/posters/%.jpg\'')).rows[0].n,6);
   const alice='11111111-1111-4111-8111-111111111111',bob='22222222-2222-4222-8222-222222222222';
   for(const[id,name]of[[alice,'alice'],[bob,'bob']])await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[id,name+'@example.test',JSON.stringify({username:name})]);
   async function as(id,sql,args=[]){await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);try{return await db.query(sql,args);}finally{await db.exec('reset role');}}
@@ -61,6 +64,8 @@ test('full movie player accepts approved embeds and rejects disguised hosts and 
  const c=vm.createContext({URL});vm.runInContext(await read('Frontend/js/movie-watch.js')+'\nglobalThis.source=CineMaxWatch.source;',c);
  assert.ok(c.source('https://video.blender.org/videos/embed/bf1f3fb5-b119-4f9f-9930-8e20e892b898'));
  assert.equal(c.source('https://rutube.ru/play/embed/de108b940b59e5e9d361077328ca9201/?autoplay=1'),'https://rutube.ru/play/embed/de108b940b59e5e9d361077328ca9201/');
+ assert.equal(c.source('https://www.youtube.com/embed/-dLBhMfVi3E?autoplay=1'),'https://www.youtube-nocookie.com/embed/-dLBhMfVi3E');
+ for(const url of ['https://www.youtube.com.evil.test/embed/-dLBhMfVi3E','https://www.youtube.com/watch?v=-dLBhMfVi3E','https://www.youtube.com/embed/not-valid','https://evil.test@www.youtube.com/embed/-dLBhMfVi3E'])assert.equal(c.source(url),'');
  for(const url of ['https://rutube.ru.evil.test/play/embed/de108b940b59e5e9d361077328ca9201/','https://rutube.ru/video/de108b940b59e5e9d361077328ca9201/','https://evil.test@rutube.ru/play/embed/de108b940b59e5e9d361077328ca9201/','http://rutube.ru/play/embed/de108b940b59e5e9d361077328ca9201/'])assert.equal(c.source(url),'');
  assert.equal(c.source('https://evil.test/movie.mp4'),'');assert.equal(c.source('https://video.blender.org.evil.test/videos/embed/bf1f3fb5-b119-4f9f-9930-8e20e892b898'),'');assert.equal(c.source('javascript:alert(1)'),'');
 });
