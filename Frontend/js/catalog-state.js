@@ -12,7 +12,7 @@ const CineMaxCatalog = (() => {
   }
   function save(){
     const url=new URL(location.href),p=new URLSearchParams();
-    for(const[id,key]of Object.entries(fields)){const value=document.getElementById(id)?.value;if(value&&!(key==='sortBy'&&value==='rating'))p.set(key,value);}
+    for(const[id,key]of Object.entries(fields)){const value=document.getElementById(id)?.value;if(value&&!(key==='sortBy'&&value==='featured'))p.set(key,value);}
     if(currentGenre)p.set('genreId',currentGenre);if(currentPage>1)p.set('page',currentPage);
     url.search=p.toString();history.replaceState(history.state,'',url);
   }

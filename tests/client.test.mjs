@@ -84,6 +84,15 @@ test('movie pagination and relation mapping preserve the existing page contract'
   assert.equal(search.includes('rating.gt.0'), false);
 });
 
+test('featured catalog orders selected movies before pagination and respects explicit sorting',async()=>{
+ const {api,calls}=await adapterContext();
+ await api.getWithHeaders('/movies?page=1&pageSize=12');
+ const priority=calls.findIndex(c=>c[0]==='order'&&c[2]==='catalogPriority');
+ assert.ok(priority>=0);assert.equal(calls[priority][3].ascending,false);
+ assert.ok(priority<calls.findIndex(c=>c[0]==='range'));
+ for(const sort of ['rating','year','title']){calls.length=0;await api.getWithHeaders('/movies?sortBy='+sort);assert.equal(calls.some(c=>c[0]==='order'&&c[2]==='catalogPriority'),false);}
+});
+
 test('actor name searches include both leading actors and cast links',async()=>{
  const {api,calls,state}=await adapterContext();state.tables={actors:[{actorID:1}],movieactors:[{movieID:7}],movies:[]};
  await api.getWithHeaders('/movies?search='+encodeURIComponent('ДиКаприо'));

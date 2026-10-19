@@ -91,7 +91,9 @@ const supabaseApi = (() => {
     if (Number(params.get('maxMinutes')) > 0) query = query.lte('durationMinutes', Number(params.get('maxMinutes')));
     if (Number(params.get('intensity')) > 0) query = query.lte('intensity', Number(params.get('intensity')));
     if (params.get('free') === 'true') query = query.eq('isFree', true);
-    const sort = { rating: 'rating', year: 'releaseYear', title: 'title' }[params.get('sortBy')] || 'rating';
+    const requestedSort = params.get('sortBy') || 'featured';
+    if (requestedSort === 'featured') query = query.order('catalogPriority', { ascending: false });
+    const sort = { rating: 'rating', year: 'releaseYear', title: 'title' }[requestedSort] || 'rating';
     const result = await query.order(sort, { ascending: sort === 'title' }).order('movieID').range((page - 1) * size, page * size - 1);
     return { data: (value(result) || []).map(movie), total: result.count || 0 };
   }
