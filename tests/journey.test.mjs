@@ -32,6 +32,10 @@ test('private diary, catalog expansion, full films and AI rate limit execute in 
   assert.equal(featured[10].title,'Владивосток');
   assert.equal(featured[11].catalogPriority,0);
   assert.deepEqual(featured.slice(0,11).map(m=>m.catalogPriority),[11,10,9,8,7,6,5,4,3,2,1]);
+  for(let run=0;run<2;run++)await db.exec(await read('supabase/migrations/202610190011_recent_licensed_movies.sql'));
+  assert.equal((await db.query('select count(*)::int n from public.movies where published')).rows[0].n,50);
+  assert.equal((await db.query('select count(*)::int n from public.movies where "isFree" and "releaseYear">=2023 and "languageName"=\'Английский\' and "watchSourceUrl" like \'https://www.youtube.com/embed/%\'')).rows[0].n,3);
+  assert.equal((await db.query('select "posterUrl" from public.movies where title=\'Sirona\'')).rows[0].posterUrl,'/assets/posters/sirona-2023.png');
   const alice='11111111-1111-4111-8111-111111111111',bob='22222222-2222-4222-8222-222222222222';
   for(const[id,name]of[[alice,'alice'],[bob,'bob']])await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[id,name+'@example.test',JSON.stringify({username:name})]);
   async function as(id,sql,args=[]){await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);try{return await db.query(sql,args);}finally{await db.exec('reset role');}}

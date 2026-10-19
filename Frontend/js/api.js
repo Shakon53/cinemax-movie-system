@@ -75,7 +75,7 @@ function ratingStars(r) {
 }
 
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function safeUrl(value) { if (/^\/assets\/posters\/[a-z0-9-]+\.(?:svg|jpg)$/.test(String(value))) return value; try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch { return ''; } }
+function safeUrl(value) { if (/^\/assets\/posters\/[a-z0-9-]+\.(?:svg|jpg|png)$/.test(String(value))) return value; try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch { return ''; } }
 function youtubeVideoId(value) {
   const input = String(value || '').trim();
   if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
