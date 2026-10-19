@@ -14,6 +14,7 @@ const supabaseApi = (() => {
     if (result.error) {
       if (result.error.code === '23505') throw new Error('Такое имя или запись уже существует.');
       if (result.error.code === '42501') throw new Error('Недостаточно прав. Войдите в нужный аккаунт.');
+      if (result.error.code === '23514' && result.error.message?.includes('movies_published_full_movie')) throw new Error('Для публикации нужны обложка и ссылка на полный фильм в поддерживаемом плеере.');
       if (['42P01','PGRST205'].includes(result.error.code)) throw new Error('Личный дневник временно недоступен. Попробуйте позже.');
       throw new Error(result.error.message || 'Ошибка Supabase.');
     }
@@ -56,7 +57,7 @@ const supabaseApi = (() => {
   async function movieList(params) {
     const page = Math.max(1, parseInt(params.get('page')) || 1);
     const size = Math.min(100, Math.max(1, parseInt(params.get('pageSize')) || 10));
-    let query = db().from('movies').select(movieSelect, { count: 'exact' });
+    let query = db().from('movies').select(movieSelect, { count: 'exact' }).eq('published', true);
     const search = params.get('search')?.trim();
     if (search) {
       // Strip PostgREST filter syntax; user input cannot introduce another filter.

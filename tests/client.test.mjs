@@ -83,6 +83,7 @@ test('movie pagination and relation mapping preserve the existing page contract'
   state.data = [{ movieID: 1, title: 'Film', rating: '8.5', budget: '100', boxOffice: '200', genre: { genreName: 'Drama' }, director: { fullName: 'Director' }, country: { countryName: 'Country' }, ratingInfo: { imDbRating: '8.5', rottenTomatoes: 90 } }];
   state.count = 42;
   const result = await api.getWithHeaders('/movies?page=2&pageSize=10&sortBy=title&search=test),rating.gt.0');
+  assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='movies'&&c[2]==='published'&&c[3]===true));
   assert.equal(result.total, 42);
   assert.equal(result.data[0].genreName, 'Drama');
   assert.equal(result.data[0].rating, 8.5);

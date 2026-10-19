@@ -36,6 +36,16 @@ test('private diary, catalog expansion, full films and AI rate limit execute in 
   assert.equal((await db.query('select count(*)::int n from public.movies where published')).rows[0].n,50);
   assert.equal((await db.query('select count(*)::int n from public.movies where "isFree" and "releaseYear">=2023 and "languageName"=\'Английский\' and "watchSourceUrl" like \'https://www.youtube.com/embed/%\'')).rows[0].n,3);
   assert.equal((await db.query('select "posterUrl" from public.movies where title=\'Sirona\'')).rows[0].posterUrl,'/assets/posters/sirona-2023.png');
+  for(let run=0;run<2;run++)await db.exec(await read('supabase/migrations/202610190012_full_movies_only.sql'));
+  assert.equal((await db.query('select count(*)::int n from public.movies where published')).rows[0].n,21);
+  assert.equal((await db.query('select count(*)::int n from public.movies where published and (not "isFree" or "watchSourceUrl"=\'\' or "posterUrl"=\'\')')).rows[0].n,0);
+  assert.equal((await db.query('select published from public.movies where "movieID"=1')).rows[0].published,false);
+  await assert.rejects(db.exec('update public.movies set published=true where "movieID"=1'),/movies_published_full_movie/);
+  await assert.rejects(db.exec('update public.movies set "watchSourceUrl"=\'https://evil.test/embed/movie\' where title=\'Sirona\''),/movies_published_full_movie/);
+  await db.exec('set role anon');
+  assert.equal((await db.query('select count(*)::int n from public.movies')).rows[0].n,21);
+  assert.equal((await db.query('select * from public.movies where "movieID"=1')).rows.length,0);
+  await db.exec('reset role');
   const alice='11111111-1111-4111-8111-111111111111',bob='22222222-2222-4222-8222-222222222222';
   for(const[id,name]of[[alice,'alice'],[bob,'bob']])await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[id,name+'@example.test',JSON.stringify({username:name})]);
   async function as(id,sql,args=[]){await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);try{return await db.query(sql,args);}finally{await db.exec('reset role');}}
