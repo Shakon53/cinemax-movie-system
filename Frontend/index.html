@@ -9,8 +9,9 @@
   <link href="css/style.css" rel="stylesheet">
 <link href="css/features.css" rel="stylesheet">
   <link href="css/hero-mosaic.css" rel="stylesheet"><link href="css/concierge.css" rel="stylesheet">
+  <link href="css/home-controls.css" rel="stylesheet">
 </head>
-<body>
+<body class="home-controls">
 <div style="padding:12px 24px;background:#13281c;text-align:center"><a href="free.html" style="color:#8be5ac;text-decoration:none">Бесплатное кино: Big Buck Bunny и Sintel — открытые фильмы Blender →</a></div>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg">
@@ -20,16 +21,16 @@
         <i class="bi bi-list text-white fs-4"></i>
       </button>
       <div class="collapse navbar-collapse" id="navMain">
-        <ul class="navbar-nav ms-4 me-auto gap-1">
+        <ul class="navbar-nav site-nav-links">
+          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
 <li class="nav-item"><a class="nav-link" href="profile.html"><i class="bi bi-journal me-1"></i>Мой дневник</a></li>
 <li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
-          <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
           <li class="nav-item"><a class="nav-link" href="reviews.html"><i class="bi bi-chat-square-text me-1"></i><span data-i18n="nav_reviews">Reviews</span></a></li>
           <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-info-circle me-1"></i><span data-i18n="nav_about">About</span></a></li>
           <li class="nav-item"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i><span data-i18n="nav_favorites">Favorites</span> <span id="favCount" style="background:#e50914;border-radius:10px;padding:1px 6px;font-size:11px;">0</span></a></li>
         </ul>
-        <div class="d-flex align-items-center gap-2 ms-3">
+        <div class="site-nav-tools">
           <div id="userNavArea"></div>
           <div class="lang-switcher" id="langSwitcher"></div>
           <button class="theme-toggle" onclick="toggleTheme()"><i class="bi bi-sun" id="themeIcon"></i> <span id="themeLabel" data-i18n="light">Light</span></button>
@@ -63,8 +64,8 @@
 
   <!-- SEARCH & FILTER -->
   <section class="search-section" id="catalog" style="scroll-margin-top:100px">
-    <div class="d-flex gap-3 align-items-center flex-wrap">
-      <div class="position-relative flex-grow-1">
+    <div class="catalog-toolbar">
+      <div class="position-relative catalog-search">
         <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
         <input type="text" id="searchInput" class="search-bar" data-i18n="search_placeholder" data-i18n-attr="placeholder" placeholder="Search movies by title or description..." style="padding-left:44px;">
       </div>
@@ -81,7 +82,7 @@
         <option value="1997">1997</option>
         <option value="1994">1994</option>
       </select>
-<label class="visually-hidden" for="actorSelect">Актёр</label><select id="actorSelect" class="filter-btn" style="max-width:210px"><option value="">Все актёры</option></select>
+<select id="actorSelect" class="filter-btn" aria-label="Актёр"><option value="">Все актёры</option></select>
       <select id="sortSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
         <option value="featured" data-i18n="sort_featured">🎬 Featured</option>
         <option value="rating" data-i18n="sort_top">⭐ Top Rated</option>
@@ -94,7 +95,7 @@
     </div>
     <details class="discovery-panel mt-3">
       <summary><i class="bi bi-magic me-2"></i>Подобрать по настроению и времени</summary>
-      <div class="d-flex gap-3 flex-wrap align-items-end mt-3">
+      <div class="discovery-controls mt-3">
         <label class="discovery-field">Настроение
           <select id="moodSelect" class="filter-btn"><option value="">Любое</option><option value="happy">Көңілді · Весёлое</option><option value="romantic">Романтическое</option><option value="horror">Қорқынышты · Страшное</option><option value="calm">Тыныш · Спокойное</option><option value="cozy">Легко и уютно</option><option value="thoughtful">Хочу подумать</option><option value="adrenaline">Нужен драйв</option><option value="emotional">Сильные эмоции</option><option value="epic">Большое приключение</option></select>
         </label>
@@ -108,8 +109,10 @@
         <label class="discovery-field">Доступ
           <select id="accessSelect" class="filter-btn"><option value="">Весь каталог</option><option value="free">Бесплатные фильмы</option></select>
         </label>
+        <div class="discovery-actions">
         <button type="button" id="randomMovie" class="btn-outline-red px-3 py-2"><i class="bi bi-shuffle me-1"></i>Выбрать за меня</button>
         <button type="button" id="resetDiscovery" class="filter-btn">Сбросить</button>
+        </div>
       </div>
       <p class="discovery-note mt-2 mb-0">Подбор по редакционным меткам каталога. Хотите выбрать вместе? <a href="match.html">Создать комнату →</a></p>
     </details>
