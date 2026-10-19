@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 <link href="css/features.css" rel="stylesheet">
-  <link href="css/hero-mosaic.css" rel="stylesheet">
+  <link href="css/hero-mosaic.css" rel="stylesheet"><link href="css/concierge.css" rel="stylesheet">
 </head>
 <body>
 <div style="padding:12px 24px;background:#13281c;text-align:center"><a href="free.html" style="color:#8be5ac;text-decoration:none">Бесплатное кино: Big Buck Bunny и Sintel — открытые фильмы Blender →</a></div>
@@ -21,6 +21,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navMain">
         <ul class="navbar-nav ms-4 me-auto gap-1">
+<li class="nav-item"><a class="nav-link" href="profile.html"><i class="bi bi-journal me-1"></i>Мой дневник</a></li>
 <li class="nav-item"><a class="nav-link" href="match.html"><i class="bi bi-people-fill me-1"></i>Выбрать с друзьями</a></li>
           <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i><span data-i18n="nav_home">Home</span></a></li>
           <li class="nav-item"><a class="nav-link" href="actors.html"><i class="bi bi-people me-1"></i><span data-i18n="nav_actors">Actors</span></a></li>
@@ -62,14 +63,14 @@
 
   <!-- SEARCH & FILTER -->
   <section class="search-section" id="catalog" style="scroll-margin-top:100px">
-    <div class="d-flex gap-3 align-items-center">
+    <div class="d-flex gap-3 align-items-center flex-wrap">
       <div class="position-relative flex-grow-1">
         <i class="bi bi-search position-absolute" style="left:16px;top:50%;transform:translateY(-50%);color:#666;"></i>
         <input type="text" id="searchInput" class="search-bar" data-i18n="search_placeholder" data-i18n-attr="placeholder" placeholder="Search movies by title or description..." style="padding-left:44px;">
       </div>
       <select id="yearSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
         <option value="" data-i18n="year_all">All Years</option>
-        <option value="2023">2023</option>
+        <option value="2024">2024</option><option value="2023">2023</option><option value="2020">2020</option><option value="2017">2017</option><option value="2016">2016</option><option value="2012">2012</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2002">2002</option><option value="1998">1998</option><option value="1993">1993</option><option value="1982">1982</option><option value="1975">1975</option>
         <option value="2021">2021</option>
         <option value="2015">2015</option>
         <option value="2014">2014</option>
@@ -80,6 +81,7 @@
         <option value="1997">1997</option>
         <option value="1994">1994</option>
       </select>
+<label class="visually-hidden" for="actorSelect">Актёр</label><select id="actorSelect" class="filter-btn" style="max-width:210px"><option value="">Все актёры</option></select>
       <select id="sortSelect" class="filter-btn" style="border-radius:50px;padding:10px 16px;">
         <option value="rating" data-i18n="sort_top">⭐ Top Rated</option>
         <option value="year" data-i18n="sort_new">📅 Newest</option>
@@ -93,11 +95,12 @@
       <summary><i class="bi bi-magic me-2"></i>Подобрать по настроению и времени</summary>
       <div class="d-flex gap-3 flex-wrap align-items-end mt-3">
         <label class="discovery-field">Настроение
-          <select id="moodSelect" class="filter-btn"><option value="">Любое</option><option value="cozy">Легко и уютно</option><option value="thoughtful">Хочу подумать</option><option value="adrenaline">Нужен драйв</option><option value="emotional">Сильные эмоции</option><option value="epic">Большое приключение</option></select>
+          <select id="moodSelect" class="filter-btn"><option value="">Любое</option><option value="happy">Көңілді · Весёлое</option><option value="romantic">Романтическое</option><option value="horror">Қорқынышты · Страшное</option><option value="calm">Тыныш · Спокойное</option><option value="cozy">Легко и уютно</option><option value="thoughtful">Хочу подумать</option><option value="adrenaline">Нужен драйв</option><option value="emotional">Сильные эмоции</option><option value="epic">Большое приключение</option></select>
         </label>
         <label class="discovery-field">Сколько есть времени
-          <select id="timeSelect" class="filter-btn"><option value="">Без ограничения</option><option value="30">До 30 минут</option><option value="90">До 90 минут</option><option value="120">До 2 часов</option><option value="180">До 3 часов</option></select>
+          <select id="timeSelect" class="filter-btn"><option value="">Без ограничения</option><option value="30">До 30 минут</option><option value="60">До 60 минут</option><option value="90">До 90 минут</option><option value="120">До 2 часов</option><option value="180">До 3 часов</option></select>
         </label>
+<label class="discovery-field">Не короче<select id="minTimeSelect" class="filter-btn"><option value="">Любая длительность</option><option value="30">30 минут</option><option value="60">1 час</option><option value="121">Больше 2 часов</option></select></label>
         <label class="discovery-field">Насыщенность
           <select id="intensitySelect" class="filter-btn"><option value="">Любая</option><option value="2">Лёгкое кино</option><option value="3">Умеренная</option><option value="5">Можно напряжённое</option></select>
         </label>
@@ -111,6 +114,7 @@
     </details>
   </section>
 
+  <section class="concierge-section" id="movieConcierge"></section>
   <!-- MOVIES -->
   <section class="movies-section">
     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -164,11 +168,12 @@
   <script src="js/auth-helper.js"></script>
 <script src="js/favorites.js"></script>
 <script src="js/discovery.js"></script>
-<script src="js/hero-mosaic.js"></script>
+<script src="js/hero-mosaic.js"></script><script src="js/catalog-state.js"></script><script src="js/movie-watch.js"></script><script src="js/concierge.js"></script>
   <script>
     let currentPage = 1, totalCount = 0, currentGenre = '', currentSort = 'rating', searchTimeout;
     const pageSize = 12;
     let moviesRequest = 0, genresRequest = 0;
+    CineMaxCatalog.restore();
 
     async function loadGenres() {
       const request = ++genresRequest;
@@ -178,9 +183,11 @@
         const container = document.getElementById('genreFilters');
         container.querySelectorAll('[data-genre]:not([data-genre=""])').forEach(button => button.remove());
         container.querySelector('[data-genre=""]').textContent = t('genre_all');
+        container.querySelector('[data-genre=""]').classList.toggle('active',!currentGenre);
         genres.forEach(g => {
           const btn = document.createElement('button');
           btn.className = 'filter-btn';
+          btn.classList.toggle('active',String(g.genreID)===String(currentGenre));
           btn.dataset.genre = g.genreID;
           btn.textContent = g.genreName;
           btn.onclick = () => { currentGenre = g.genreID; currentPage = 1; setActiveGenre(btn); loadMovies(); };
@@ -196,6 +203,7 @@
     }
 
     async function loadMovies() {
+      CineMaxCatalog.save();
       const request = ++moviesRequest;
       document.getElementById('pagination').replaceChildren();
       const grid = document.getElementById('moviesGrid');
@@ -233,7 +241,7 @@
                 <span class="movie-genre">${escapeHtml(m.genreName)}</span>
               </div>
               <div class="d-flex align-items-center justify-content-between">
-                <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating.toFixed(1)}</span>
+                <span class="movie-rating"><i class="bi bi-star-fill"></i> ${m.rating>0?m.rating.toFixed(1):'—'}</span>
                 ${m.is3D ? '<span style="font-size:10px;background:rgba(99,102,241,0.15);color:#818cf8;padding:2px 6px;border-radius:4px;">3D</span>' : ''}
               </div>
               <a href="movie.html?id=${m.movieID}" class="btn-details">View Details</a>
@@ -241,6 +249,7 @@
           </div>`).join('');
         renderPagination(Math.ceil(total / pageSize));
         updateFavCount();
+        CineMaxCatalog.rendered();
       } catch (e) {
         if (request !== moviesRequest) return;
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-exclamation-triangle"></i><h3>Не удалось загрузить фильмы</h3><p>${escapeHtml(e.message)}</p></div>`;
@@ -259,7 +268,7 @@
     }
 
     function onLangChange() { currentPage = 1; loadGenres(); loadMovies(); loadFeatured(); applyLang(); }
-    function goPage(p) { currentPage = p; loadMovies(); window.scrollTo({top:0,behavior:'smooth'}); }
+    function goPage(p) { currentPage = p; loadMovies(); document.getElementById('catalog').scrollIntoView({behavior:'smooth'}); }
 
     document.getElementById('searchInput').addEventListener('input', () => {
       clearTimeout(searchTimeout);
@@ -298,6 +307,7 @@
       if (counts[1].status === 'fulfilled') document.getElementById('statDirectors').textContent = counts[1].value.length;
     }
 
+    (async()=>{try{const actors=await api.get('/actors');const select=document.getElementById('actorSelect');const selected=new URLSearchParams(location.search).get('actorId')||'';for(const actor of actors){const option=document.createElement('option');option.value=actor.actorID;option.textContent=actor.fullName;select.append(option);}select.value=selected;}catch{}})();
     loadFeatured();
     loadGenres();
     loadMovies();

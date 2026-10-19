@@ -41,7 +41,7 @@ test('failed login and confirmation-required signup show visible feedback',async
 
 test('slow earlier catalog requests cannot overwrite newer search results',async()=>{
   const {document}=screen();const requests=[];
-  const c=vm.createContext({document,window:{},localStorage:{getItem(){return null;}},URLSearchParams,
+  const c=vm.createContext({document,window:{},location:{search:''},CineMaxCatalog:{restore(){},save(){},rendered(){}},localStorage:{getItem(){return null;}},URLSearchParams,
     api:{get:async()=>[],getWithHeaders:()=>new Promise(resolve=>requests.push(resolve))},
     CineMaxFavorites:{initialize:async()=>[],list:()=>[]},loadCinemaHero(){},appendDiscoveryFilters(){},t:k=>k,escapeHtml:s=>s,applyLang(){}});
   vm.runInContext(inline(await file('index.html')),c);
@@ -62,7 +62,7 @@ test('trailer IDs accept official YouTube URL formats and reject other origins',
 test('trailer iframe loads only after the visitor presses play',async()=>{
   const {document}=screen();
   const c=vm.createContext({document,window:{},location:{search:'?id=1'},URL,URLSearchParams,
-    api:{get:()=>new Promise(()=>{}),getWithHeaders:async()=>({data:[]})},escapeHtml:String,safeUrl:()=>'',formatMoney:()=>'',youtubeVideoId:()=> 'YoHD9XEInc0'});
+    CineMaxJourney:{loadMovie(){}},CineMaxWatch:{mount(){}},api:{get:()=>new Promise(()=>{}),getWithHeaders:async()=>({data:[]})},escapeHtml:String,safeUrl:()=>'',formatMoney:()=>'',youtubeVideoId:()=> 'YoHD9XEInc0'});
   vm.runInContext(inline(await file('movie.html')),c);
   c.render({movieID:1,title:'Film',rating:8,genreID:1,actors:[],reviews:[]});
   assert.equal(document.getElementById('trailerFrame').src,undefined);
