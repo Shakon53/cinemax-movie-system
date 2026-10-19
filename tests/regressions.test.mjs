@@ -39,6 +39,15 @@ test('failed login and confirmation-required signup show visible feedback',async
   assert.equal(store.has('cinemax_user'),false);
 });
 
+test('login returns to Netlify pretty movie URLs and rejects external destinations',async()=>{
+ const {document}=screen();
+ const c=vm.createContext({document,window:{},URL,URLSearchParams,location:{origin:'https://site.test',href:'https://site.test/auth',search:'?returnTo=%2Fmovie%3Fid%3D1'},localStorage:{getItem(){return null;}},api:{get:()=>new Promise(()=>{})}});
+ vm.runInContext(inline(await file('auth.html')),c);
+ assert.equal(c.authDestination(),'https://site.test/movie?id=1');
+ c.location.search='?returnTo=https%3A%2F%2Fevil.test%2Fmovie';
+ assert.equal(c.authDestination(),'index.html');
+});
+
 test('slow earlier catalog requests cannot overwrite newer search results',async()=>{
   const {document}=screen();const requests=[];
   const c=vm.createContext({document,window:{},location:{search:''},CineMaxCatalog:{restore(){},save(){},rendered(){}},localStorage:{getItem(){return null;}},URLSearchParams,
