@@ -65,13 +65,20 @@ const supabaseApi = (() => {
       if (term) {
         const aliases=[['дикаприо','Leonardo DiCaprio'],['леонардо','Leonardo DiCaprio'],['том хэнкс','Tom Hanks'],['том ханкс','Tom Hanks'],['том харди','Tom Hardy'],['томас харди','Tom Hardy'],['гослинг','Ryan Gosling'],['джим керри','Jim Carrey'],['джим кэрри','Jim Carrey'],['эми адамс','Amy Adams'],['хью джекман','Hugh Jackman'],['эмма стоун','Emma Stone'],['хэтэуэй','Anne Hathaway'],['уинслет','Kate Winslet'],['бэйл','Christian Bale'],['бейл','Christian Bale'],['киллиан','Cillian Murphy'],['мерфи','Cillian Murphy'],['шаламе','Timothee Chalamet']];
         const actorTerm=aliases.find(([name])=>term.toLowerCase().includes(name))?.[1]||term;
-        const actors = value(await db().from('actors').select('actorID').ilike('fullName', `%${actorTerm}%`)) || [];
-        const actorIds = actors.map(a=>a.actorID).filter(Number.isSafeInteger);
-        const cast = actorIds.length ? value(await db().from('movieactors').select('movieID').in('actorID',actorIds)) || [] : [];
         const clauses = [`title.ilike.%${term}%`,`description.ilike.%${term}%`];
-        if (actorIds.length) clauses.push(`mainActorID.in.(${actorIds.join(',')})`);
-        const castIds = [...new Set(cast.map(c=>c.movieID))].filter(Number.isSafeInteger);
-        if (castIds.length) clauses.push(`movieID.in.(${castIds.join(',')})`);
+        // Actor matching enriches the normal title/description search, but must
+        // never make that search unavailable when an auxiliary table is down or
+        // its public SELECT policy has not been deployed yet.
+        try {
+          const actors = value(await db().from('actors').select('actorID').ilike('fullName', `%${actorTerm}%`)) || [];
+          const actorIds = actors.map(a=>a.actorID).filter(Number.isSafeInteger);
+          const cast = actorIds.length ? value(await db().from('movieactors').select('movieID').in('actorID',actorIds)) || [] : [];
+          if (actorIds.length) clauses.push(`mainActorID.in.(${actorIds.join(',')})`);
+          const castIds = [...new Set(cast.map(c=>c.movieID))].filter(Number.isSafeInteger);
+          if (castIds.length) clauses.push(`movieID.in.(${castIds.join(',')})`);
+        } catch (error) {
+          console.warn('Actor search is temporarily unavailable; continuing with movie fields.', error);
+        }
         query = query.or(clauses.join(','));
       }
     }
